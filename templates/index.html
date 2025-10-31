@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basketball Streams</title>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f7f9;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #1a202c;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+      .game-list {
+        list-style: none;
+        padding: 0;
+      }
+      .game-item {
+        background: white;
+        margin-bottom: 12px;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        transition: transform 0.2s;
+      }
+      .game-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+      }
+      .game-info strong {
+        color: #3182ce;
+        font-size: 1.15em;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .game-details {
+        font-size: 0.9em;
+        color: #4a5568;
+        margin-top: 5px;
+      }
+      .watch-link {
+        background-color: #48bb78; /* Green button */
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+        align-self: flex-end;
+      }
+      .watch-link:hover {
+        background-color: #38a169;
+      }
+      .live-status {
+        color: #e53e3e;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+      @media (min-width: 600px) {
+        .game-item {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .watch-link {
+          margin-top: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏀 Basketball Streams List</h1>
+      {% if games %}
+      <ul class="game-list">
+        {% for game in games %}
+        <li class="game-item">
+          <div class="game-content">
+            <strong
+              >{{ game.title }}
+              <span class="game-details"
+                >{{ sb_data[game.teams]["game_status"] }}</span
+              ></strong
+            >
+            {% if sb_data[game.teams] %}
+            <div class="game-details">
+              <span>{{ sb_data[game.teams]["best_stats_away"] }}</span>
+              <span> | </span>
+              <span>{{ sb_data[game.teams]["best_stats_home"] }}</span>
+            </div>
+            {% endif %}
+          </div>
+          <a
+            href="{{ url_for('iframe_viewer', stream_id=game.id) }}"
+            class="watch-link"
+            target="_blank"
+          >
+            Watch Stream
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>
+        No basketball streams were loaded. Check API access or the hardcoded
+        index in `app.py`.
+      </p>
+      {% endif %}
+    </div>
+  </body>
+</html>

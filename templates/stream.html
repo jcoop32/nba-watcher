@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watching: {{ title }}</title>
+    <style>
+      /* CSS to ensure the iframe takes up the full screen and removes default margins/padding */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%; /* Important for full viewport height */
+        width: 100%; /* Important for full viewport width */
+        overflow: hidden; /* Prevents scrollbars on the main page */
+        background-color: #000; /* Optional: Black background outside the iframe */
+      }
+
+      #full-screen-iframe {
+        border: none; /* Removes the default border */
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      id="full-screen-iframe"
+      src="https://embedhd.live/player.php?={{ id }}"
+      title="{{ title }}"
+      allow="encrypted-media; picture-in-picture; fullscreen"
+      allowfullscreen
+    ></iframe>
+  </body>
+</html>
