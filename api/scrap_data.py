@@ -1,7 +1,8 @@
 import requests
 import re
 import json
-from utils import team_abbrv
+from utils.team_abbrv import nba_team_abbreviations as abv
+from utils.get_team_abbreves import extract_teams_from_game_title
 
 def get_nba_streams():
     url = 'https://embedhd.live/'
@@ -41,14 +42,13 @@ def get_nba_streams():
     # 4. Filter for 'Basketball' league and structure the output
     for stream_id, data in streams_dict.items():
         if data.get('league') == 'Basketball':
-            away_team = data["name"][0].strip()
-            home_team = data["name"][1].strip()
+            away_team, home_team = extract_teams_from_game_title(data["name"])
             basketball_streams.append({
                 'title': data.get('name', 'N/A'),
                 'id': stream_id,
                 # "home_team": home_team,
                 # "away_team": away_team,
-                "teams": away_team + home_team
+                "teams": abv[away_team] + abv[home_team]
             })
 
     return basketball_streams

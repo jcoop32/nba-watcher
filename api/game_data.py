@@ -1,10 +1,9 @@
 from nba_api.live.nba.endpoints import scoreboard
+from utils.game_start import has_game_started
 
 def get_scoreboard_data():
-    # Today's Score Board
     games = scoreboard.ScoreBoard()
     g_to_dict = games.get_dict()
-    print(g_to_dict["scoreboard"]["games"])
     all_game_scoreboard = g_to_dict["scoreboard"]["games"]
     game_scoreboards = {}
     for game in all_game_scoreboard:
@@ -14,6 +13,7 @@ def get_scoreboard_data():
         away_scoreboard =  game["gameLeaders"]["awayLeaders"]
         data = {
             "game_status": game["gameStatusText"],
+            "game_started_yet": has_game_started(game["gameTimeUTC"]),
             "best_stats_home": f'{home_scoreboard["name"]} -  {home_scoreboard["points"]}pts - {home_scoreboard["rebounds"]}rebs - {home_scoreboard["assists"]}asts',
             "best_stats_away": f'{away_scoreboard["name"]} -  {away_scoreboard["points"]}pts - {away_scoreboard["rebounds"]}rebs - {home_scoreboard["assists"]}asts',
         }
@@ -21,7 +21,5 @@ def get_scoreboard_data():
 
     return game_scoreboards
 
-# scoreboard_data = get_scoreboard_data()
-# print(scoreboard_data)
-# print(scoreboard_data["GSWMIL"])
+
 

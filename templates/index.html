@@ -97,11 +97,15 @@
                 >{{ sb_data[game.teams]["game_status"] }}</span
               ></strong
             >
-            {% if sb_data[game.teams] %}
+            {% if sb_data["game_started_yet"] %}
             <div class="game-details">
               <span>{{ sb_data[game.teams]["best_stats_away"] }}</span>
               <span> | </span>
               <span>{{ sb_data[game.teams]["best_stats_home"] }}</span>
+            </div>
+            {% else %}
+            <div class="game-details">
+              <span></span>
             </div>
             {% endif %}
           </div>
