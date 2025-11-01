@@ -6,12 +6,16 @@ from api.game_data import get_scoreboard_data
 app = Flask(__name__)
 
 RAW_GAMES_LIST = get_nba_streams()
+# RAW_GAMES_LIST.append({'title': 'Sac Kings vs. Mil Bucks', 'id': '6686', 'teams': 'SACMILS'})
+# print(RAW_GAMES_LIST)
 # RAW_GAMES_LIST = [{'title': 'Orlando Magic vs. Charlotte Hornets', 'id': '4916', "teams": "ORLCHA"}, {'title': 'Golden State Warriors vs. Milwaukee Bucks', 'id': '1781', "teams": "GSWMIL"}, {'title': 'Washington Wizards vs. Oklahoma City Thunder', 'id': '6707', "teams": "WASOKC"}, {'title': 'Miami Heat vs. San Antonio Spurs', 'id': '8292', "teams": "MIASAS"}]
 
 
 BASKETBALL_STREAMS = {stream['id']: stream for stream in RAW_GAMES_LIST}
 
 scoreboard_data = get_scoreboard_data()
+# scoreboard_data.update({'SACMILS': {'game_status': '5:00 pm ET', 'game_started_yet': True, 'best_stats_home': ' -  1pts - 1rebs - 1asts', 'best_stats_away': ' -  0pts - 0rebs - 0asts'}})
+# print(scoreboard_data)
 
 # TODO: fix scoreboard data to be able to integrate well with stream api
 

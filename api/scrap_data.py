@@ -5,7 +5,7 @@ from utils.team_abbrv import nba_team_abbreviations as abv
 from utils.get_team_abbreves import extract_teams_from_game_title
 
 def get_nba_streams():
-    url = 'https://embedhd.live/'
+    url = 'https://embedhd.io/'
     try:
         # 1. Fetch the webpage content
         headers = {
