@@ -5,7 +5,9 @@ from utils.team_abbrv import nba_team_abbreviations as abv
 from utils.get_team_abbreves import extract_teams_from_game_title
 
 def get_nba_streams():
-    url = 'https://embedhd.io/'
+    # url = 'https://embedhd.io/'
+    url = "https://lotusgamehd.xyz/api-event.php"
+    # url = 'https://lotusgamehd.xyz/'
     try:
         # 1. Fetch the webpage content
         headers = {

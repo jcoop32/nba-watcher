@@ -93,13 +93,9 @@
           <div class="game-content">
             <strong
               >{{ game.title }}
-              <span class="game-details"
-                >{{ sb_data[game.teams]["game_status"] }}</span
-              ></strong
-            >
-            {% if sb_data[game.teams]["game_started_yet"] and
-            sb_data[game.teams]["best_stats_away"]["name"] or
-            sb_data[game.teams]["best_stats_home"]["name"] %}
+              <span class="game-details">{{ game.status }}</span>
+            </strong>
+            {% if sb_data[game.teams]["game_started_yet"] %}
             <div class="game-details">
               <span>{{ sb_data[game.teams]["best_stats_away"] }}</span>
               <span> | </span>
@@ -112,10 +108,11 @@
             {% endif %}
           </div>
           <a
-            href="{{ url_for('iframe_viewer', stream_id=game.id) }}"
+            href="{{ url_for('iframe_viewer', stream_id=game.stream_id) }}"
             class="watch-link"
             target="_blank"
           >
+            <!-- <style></style> -->
             Watch Stream
           </a>
         </li>
