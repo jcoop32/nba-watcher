@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, jsonify # Import jsonify
+from flask import Flask, render_template, abort, jsonify
 from api.scoreboard_data import get_scoreboard_data
 from datetime import date
 from api.games_streams import get_basketball_games
@@ -10,24 +10,31 @@ app = Flask(__name__)
 # Global list of games is necessary to keep track of streams for the viewer route
 RAW_GAMES_LIST = []
 
+def get_game_list_from_cache_or_api():
+    global RAW_GAMES_LIST
+    if not RAW_GAMES_LIST:
+        RAW_GAMES_LIST = get_basketball_games()
+    return RAW_GAMES_LIST
+
 @app.route('/')
 def index():
-    global RAW_GAMES_LIST
-    RAW_GAMES_LIST = get_basketball_games()
+    games_list = get_game_list_from_cache_or_api()
 
-    scoreboard_data_teams = [game["teams"] for game in RAW_GAMES_LIST]
+    scoreboard_data_teams = [game["teams"] for game in games_list]
 
     scoreboard_data = get_scoreboard_data(scoreboard_data_teams)
-    return render_template('index.html', games=RAW_GAMES_LIST, sb_data=scoreboard_data)
+    return render_template('index.html', games=games_list, sb_data=scoreboard_data)
 
 # NEW ROUTE FOR AJAX POLLING
 @app.route('/api/scoreboard')
 def api_scoreboard():
-    # Fetch the list of games again to get the necessary team codes
-    games_list = get_basketball_games()
+    # EFFICIENCY FIX: Rely on the global list populated by the index page.
+    # We DO NOT call the stream API (get_basketball_games) again here.
+    games_list = get_game_list_from_cache_or_api()
+
+    # Only fetch scoreboard data (nba_api), which is necessary for live updates.
     scoreboard_data_teams = [game["teams"] for game in games_list]
 
-    # Fetch the live data
     scoreboard_data = get_scoreboard_data(scoreboard_data_teams)
 
     # Format the data to be easily consumable by the frontend
@@ -35,7 +42,6 @@ def api_scoreboard():
     for game in games_list:
         teams_key = game["teams"]
         if teams_key in scoreboard_data:
-            # Combine basic game info (teams key) with live score data
             response_data[teams_key] = scoreboard_data[teams_key]
 
     return jsonify(response_data)
@@ -43,11 +49,7 @@ def api_scoreboard():
 
 @app.route('/watch/<stream_id>')
 def iframe_viewer(stream_id):
-    # This route relies on RAW_GAMES_LIST being populated, usually from the index route.
-    if not RAW_GAMES_LIST:
-        games_list = get_basketball_games()
-    else:
-        games_list = RAW_GAMES_LIST
+    games_list = get_game_list_from_cache_or_api()
 
     BASKETBALL_STREAMS = {stream['id']: stream for stream in games_list}
     stream_info = BASKETBALL_STREAMS.get(int(stream_id))
