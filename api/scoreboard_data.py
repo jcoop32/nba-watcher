@@ -1,5 +1,5 @@
 from nba_api.live.nba.endpoints import scoreboard
-from utils.game_start import has_game_started
+from utils.time_conversions import convert_et_to_cst_conditional, get_game_day_status, has_game_started
 
 def get_scoreboard_data(upcoming_games: list):
     games = scoreboard.ScoreBoard().get_dict()
@@ -16,16 +16,18 @@ def get_scoreboard_data(upcoming_games: list):
                 home_leader = game["gameLeaders"]["homeLeaders"]
                 away_leader = game["gameLeaders"]["awayLeaders"]
                 data = {
-                    "game_status": game["gameStatusText"],
+                    "game_status": convert_et_to_cst_conditional(game["gameStatusText"]),
                     "game_started_yet": has_game_started(game["gameTimeUTC"]),
+                    "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
                     "best_stats_home": f'{home_leader["name"]} - {home_leader["points"]}pts - {home_leader["rebounds"]}rebs - {home_leader["assists"]}asts',
                     "best_stats_away": f'{away_leader["name"]} - {away_leader["points"]}pts - {away_leader["rebounds"]}rebs - {away_leader["assists"]}asts',
                 }
             except KeyError:
                 # Game leaders might not exist yet if the game hasn’t started
                 data = {
-                    "game_status": game["gameStatusText"],
+                    "game_status": convert_et_to_cst_conditional(game["gameStatusText"]),
                     "game_started_yet": has_game_started(game["gameTimeUTC"]),
+                    "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
                     "best_stats_home": "N/A",
                     "best_stats_away": "N/A",
                 }
@@ -39,6 +41,7 @@ def get_scoreboard_data(upcoming_games: list):
             }
 
         game_scoreboards[teams] = data
+    # print(game_scoreboards)
 
     return game_scoreboards
 

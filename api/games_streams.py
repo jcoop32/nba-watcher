@@ -1,7 +1,7 @@
 import requests
 import json
 from utils.get_team_abbreves import extract_teams_from_game_title
-from utils.game_time_conversion import convert_time_and_check_day_12hr as convert_time
+from utils.time_conversions import convert_time_and_check_day_12hr as convert_time
 
 API_URL = "https://lotusgamehd.xyz/api-event.php?league=nba"
 
