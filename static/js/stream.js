@@ -37,7 +37,9 @@ document.addEventListener(
   true,
 );
 
-// --- NEW Box Score & Polling Logic ---
+// --- Box Score & Polling Logic ---
+
+let boxScoreIntervalId = null;
 
 // Function to handle tab switching
 function switchTab(teamTricode) {
@@ -78,7 +80,6 @@ function generateBoxScoreHTML(teamTricode, teamData) {
 
   // Sort players by minutes (MIN) descending
   const players = teamData.players.sort((a, b) => {
-    // Simple comparison, more robust logic would be needed for complex minutes strings
     return (parseFloat(b.min) || 0) - (parseFloat(a.min) || 0);
   });
 
@@ -109,9 +110,10 @@ function generateBoxScoreHTML(teamTricode, teamData) {
 
 // Main polling function
 function fetchAndUpdateBoxScore() {
-  if (!GAME_ID) {
-    document.getElementById('live-status').textContent =
-      'Game ID not found. Scoreboard unavailable.';
+  const liveStatusElement = document.getElementById('live-status');
+
+  if (!GAME_ID || GAME_ID === 'None' || GAME_ID === 'null') {
+    liveStatusElement.textContent = 'Game has not started.';
     return;
   }
 
@@ -119,17 +121,25 @@ function fetchAndUpdateBoxScore() {
   fetch(`/api/boxscore/${GAME_ID}`)
     .then(response => {
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Server error when fetching data.');
       }
       return response.json();
     })
     .then(data => {
+      // Check for API-level error message returned by the Python function
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Successfully retrieved and processed data
       const tabNav = document.querySelector('.tab-nav');
       const tabContentContainer = document.getElementById(
         'tab-content-container',
       );
 
-      // Clear old content only if we are rendering for the first time
+      liveStatusElement.textContent = 'Live Box Score';
+
+      // If the structure is empty (first load), build the tabs and content
       if (tabNav.children.length === 0) {
         tabNav.innerHTML = '';
         tabContentContainer.innerHTML = '';
@@ -147,7 +157,7 @@ function fetchAndUpdateBoxScore() {
             const button = document.createElement('button');
             button.className = 'tab-button';
             button.setAttribute('data-team', teamTricode);
-            button.textContent = teamTricode; // Display the team tricode (e.g., 'LAL')
+            button.textContent = teamTricode;
             button.onclick = () => switchTab(teamTricode);
             tabNav.appendChild(button);
 
@@ -186,16 +196,16 @@ function fetchAndUpdateBoxScore() {
     })
     .catch(error => {
       console.error('Error fetching box score:', error);
-      // document.getElementById('live-status').textContent = "Scoreboard Error";
+      liveStatusElement.textContent = 'Error with Scoreboard API';
     });
 }
 
-// Check if GAME_ID exists before starting polling (it might be null for future games)
-if (GAME_ID && GAME_ID !== 'None') {
+// Check if GAME_ID exists before starting polling
+if (GAME_ID && GAME_ID !== 'None' && GAME_ID !== 'null') {
   fetchAndUpdateBoxScore();
-  // Poll every 10 seconds for box score updates
-  setInterval(fetchAndUpdateBoxScore, 10000);
+  // Start polling indefinitely (or until the game ends on its own)
+  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
 } else {
-  document.getElementById('live-status').textContent =
-    'Game Box Score: Scheduled (ID missing)';
+  // Initial display for scheduled games
+  document.getElementById('live-status').textContent = 'Game has not started.';
 }
