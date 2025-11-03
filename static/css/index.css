@@ -1,3 +1,4 @@
+/* --- Global Styles --- */
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
@@ -5,70 +6,111 @@ body {
   background-color: #f4f7f9;
 }
 .container {
-  max-width: 900px;
+  max-width: 1000px; /* Increased width */
   margin: 0 auto;
 }
 h1 {
   color: #1a202c;
   border-bottom: 2px solid #e2e8f0;
   padding-bottom: 10px;
-  margin-bottom: 20px;
-  font-weight: 700;
+  margin-bottom: 30px; /* Increased margin */
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
+
+/* --- Game List Structure --- */
 .game-list {
   list-style: none;
   padding: 0;
 }
 .game-item {
   background: white;
-  margin-bottom: 12px;
-  padding: 15px 20px;
+  margin-bottom: 16px; /* Increased margin */
+  padding: 20px 25px; /* Increased padding */
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Modern, lifted shadow */
+  border-left: 5px solid #a0aec0; /* Default neutral border */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  transition: transform 0.2s;
+  transition: all 0.2s ease-in-out;
 }
 .game-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px); /* Slightly more movement */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
+
+/* Highlight for LIVE games (you'd need to add a class like .game-live dynamically) */
+.game-item.live {
+  border-left: 5px solid #e53e3e; /* Red border for live */
+}
+
+/* --- Game Content --- */
+.game-content {
+  flex-grow: 1;
+}
+
 .game-info strong {
-  color: #3182ce;
-  font-size: 1.15em;
+  color: #1a202c; /* Darker title text */
+  font-size: 1.25em;
   display: block;
   margin-bottom: 5px;
+  font-weight: 700;
 }
-.game-details {
-  font-size: 0.9em;
+
+/* Score and Status Line */
+.live-score-status {
+  font-size: 0.9em; /* Keep score and status slightly smaller than title */
   color: #4a5568;
+  font-weight: 500;
+}
+
+.live-score-text {
+  font-weight: 700;
+  color: #000;
+  margin-right: 5px;
+}
+
+.game-details {
+  font-size: 0.85em;
+  color: #718096; /* Lighter secondary text */
   margin-top: 5px;
 }
+
+.last-event-text {
+  color: #38a169; /* Highlight last event */
+  font-style: italic;
+  margin-top: 8px; /* More separation from stat leaders */
+}
+
+/* --- Watch Link Button --- */
 .watch-link {
-  background-color: #48bb78; /* Green button */
+  background-color: #3182ce; /* Primary blue button */
   color: white;
-  padding: 8px 15px;
+  padding: 10px 20px;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   transition: background-color 0.3s;
-  margin-top: 10px;
+  margin-top: 15px;
   align-self: flex-end;
+  box-shadow: 0 4px 10px rgba(49, 130, 206, 0.3);
 }
 .watch-link:hover {
-  background-color: #38a169;
+  background-color: #2b6cb0;
+  box-shadow: 0 6px 15px rgba(49, 130, 206, 0.4);
 }
-.live-status {
-  color: #e53e3e;
-  font-weight: bold;
-  margin-right: 10px;
-}
+
+/* --- Responsive Layout --- */
 @media (min-width: 600px) {
   .game-item {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+  .game-content {
+    /* Gives the content space when aligned side-by-side */
+    max-width: 70%;
   }
   .watch-link {
     margin-top: 0;

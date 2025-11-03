@@ -15,7 +15,10 @@
       {% if games %}
       <ul class="game-list">
         {% for game in games %}
-        <li class="game-item" data-teams="{{ game.teams }}">
+        <li
+          class="game-item {% if sb_data[game.teams]['game_started_yet'] %}live{% endif %}"
+          data-teams="{{ game.teams }}"
+        >
           <div class="game-content">
             <strong
               >{{ game.title }}
