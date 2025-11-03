@@ -1,3 +1,4 @@
+// --- Existing Overlay/Protection Logic ---
 var popupBlocked = false;
 
 window.open = function () {
@@ -35,3 +36,166 @@ document.addEventListener(
   },
   true,
 );
+
+// --- NEW Box Score & Polling Logic ---
+
+// Function to handle tab switching
+function switchTab(teamTricode) {
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.classList.remove('active');
+  });
+  document
+    .querySelector(`.tab-button[data-team="${teamTricode}"]`)
+    .classList.add('active');
+
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`tab-content-${teamTricode}`).classList.add('active');
+}
+
+// Function to generate the HTML table for a team's box score
+function generateBoxScoreHTML(teamTricode, teamData) {
+  let html = `
+        <div id="tab-content-${teamTricode}" class="tab-content">
+            <table class="boxscore-table">
+                <thead>
+                    <tr>
+                        <th>PLAYER</th>
+                        <th>MIN</th>
+                        <th>PTS</th>
+                        <th>REB</th>
+                        <th>AST</th>
+                        <th>FG</th>
+                        <th>3PT</th>
+                        <th>STL</th>
+                        <th>BLK</th>
+                        <th>TO</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+  // Sort players by minutes (MIN) descending
+  const players = teamData.players.sort((a, b) => {
+    // Simple comparison, more robust logic would be needed for complex minutes strings
+    return (parseFloat(b.min) || 0) - (parseFloat(a.min) || 0);
+  });
+
+  players.forEach(p => {
+    html += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.min}</td>
+                <td>${p.pts}</td>
+                <td>${p.reb}</td>
+                <td>${p.ast}</td>
+                <td>${p.fgm_fga}</td>
+                <td>${p.fg3m_fg3a}</td>
+                <td>${p.stl}</td>
+                <td>${p.blk}</td>
+                <td>${p.to}</td>
+            </tr>
+        `;
+  });
+
+  html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+  return html;
+}
+
+// Main polling function
+function fetchAndUpdateBoxScore() {
+  if (!GAME_ID) {
+    document.getElementById('live-status').textContent =
+      'Game ID not found. Scoreboard unavailable.';
+    return;
+  }
+
+  // Fetch box score data from the new Flask API endpoint
+  fetch(`/api/boxscore/${GAME_ID}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const tabNav = document.querySelector('.tab-nav');
+      const tabContentContainer = document.getElementById(
+        'tab-content-container',
+      );
+
+      // Clear old content only if we are rendering for the first time
+      if (tabNav.children.length === 0) {
+        tabNav.innerHTML = '';
+        tabContentContainer.innerHTML = '';
+
+        let firstTeamTricode = null;
+
+        // Build Tabs and Content
+        for (const teamTricode in data) {
+          if (data.hasOwnProperty(teamTricode) && data[teamTricode].players) {
+            if (!firstTeamTricode) {
+              firstTeamTricode = teamTricode;
+            }
+
+            // 1. Create Tab Button
+            const button = document.createElement('button');
+            button.className = 'tab-button';
+            button.setAttribute('data-team', teamTricode);
+            button.textContent = teamTricode; // Display the team tricode (e.g., 'LAL')
+            button.onclick = () => switchTab(teamTricode);
+            tabNav.appendChild(button);
+
+            // 2. Generate and Insert Tab Content
+            const htmlContent = generateBoxScoreHTML(
+              teamTricode,
+              data[teamTricode],
+            );
+            tabContentContainer.insertAdjacentHTML('beforeend', htmlContent);
+          }
+        }
+
+        // Activate the first tab after building
+        if (firstTeamTricode) {
+          switchTab(firstTeamTricode);
+        }
+      } else {
+        // If tabs already exist, just update the inner HTML of the tables (more efficient)
+        for (const teamTricode in data) {
+          if (data.hasOwnProperty(teamTricode) && data[teamTricode].players) {
+            const newHtmlContent = generateBoxScoreHTML(
+              teamTricode,
+              data[teamTricode],
+            );
+            const existingDiv = document.getElementById(
+              `tab-content-${teamTricode}`,
+            );
+            // Extract only the inner table HTML for update
+            const newTableHTML = newHtmlContent.match(/<table.*?<\/table>/s)[0];
+            if (existingDiv) {
+              existingDiv.innerHTML = newTableHTML;
+            }
+          }
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching box score:', error);
+      // document.getElementById('live-status').textContent = "Scoreboard Error";
+    });
+}
+
+// Check if GAME_ID exists before starting polling (it might be null for future games)
+if (GAME_ID && GAME_ID !== 'None') {
+  fetchAndUpdateBoxScore();
+  // Poll every 10 seconds for box score updates
+  setInterval(fetchAndUpdateBoxScore, 10000);
+} else {
+  document.getElementById('live-status').textContent =
+    'Game Box Score: Scheduled (ID missing)';
+}

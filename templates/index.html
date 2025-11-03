@@ -16,12 +16,26 @@
       <ul class="game-list">
         {% for game in games %}
         <li
-          class="game-item {% if sb_data[game.teams]['game_started_yet'] %}live{% endif %}"
+          class="game-item {% if sb_data[game.teams][game_started_yet] %}live{% endif %}"
           data-teams="{{ game.teams }}"
+          data-color-away="{{ game.away_color }}"
+          data-color-home="{{ game.home_color }}"
         >
           <div class="game-content">
-            <strong
-              >{{ game.title }}
+            <div class="game-header">
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.away_logo }}/primary/L/logo.svg"
+                alt="Away Logo"
+                class="team-logo away-team-logo"
+              />
+              <strong class="game-title-text">{{ game.title }}</strong>
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.home_logo }}/primary/L/logo.svg"
+                alt="Home Logo"
+                class="team-logo home-team-logo"
+              />
+            </div>
+            <strong class="score-status-line">
               <span class="live-score-status">
                 {% if sb_data[game.teams]["game_started_yet"] %}
                 <span class="live-score-text">

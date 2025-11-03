@@ -3,17 +3,18 @@ body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 20px;
-  background-color: #f4f7f9;
+  background-color: #1a1a1a; /* Dark Background */
+  color: #f0f0f0; /* Light Text */
 }
 .container {
-  max-width: 1000px; /* Increased width */
+  max-width: 1000px;
   margin: 0 auto;
 }
 h1 {
-  color: #1a202c;
-  border-bottom: 2px solid #e2e8f0;
+  color: #f0f0f0; /* Light H1 Text */
+  border-bottom: 2px solid #3d3d3d; /* Darker border */
   padding-bottom: 10px;
-  margin-bottom: 30px; /* Increased margin */
+  margin-bottom: 30px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
@@ -24,23 +25,23 @@ h1 {
   padding: 0;
 }
 .game-item {
-  background: white;
-  margin-bottom: 16px; /* Increased margin */
-  padding: 20px 25px; /* Increased padding */
+  background: #2c2c2c; /* Dark Card Background */
+  margin-bottom: 16px;
+  padding: 20px 25px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Modern, lifted shadow */
-  border-left: 5px solid #a0aec0; /* Default neutral border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+  border-left: 5px solid #4a4a4a; /* Default dark neutral border */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   transition: all 0.2s ease-in-out;
 }
 .game-item:hover {
-  transform: translateY(-3px); /* Slightly more movement */
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Highlight for LIVE games (you'd need to add a class like .game-live dynamically) */
+/* Highlight for LIVE games */
 .game-item.live {
   border-left: 5px solid #e53e3e; /* Red border for live */
 }
@@ -50,24 +51,59 @@ h1 {
   flex-grow: 1;
 }
 
-.game-info strong {
-  color: #1a202c; /* Darker title text */
-  font-size: 1.25em;
-  display: block;
+/* --- NEW Logo/Header Styling --- */
+.game-header {
+  display: flex;
+  align-items: center;
   margin-bottom: 5px;
+  width: 100%;
+}
+
+.team-logo {
+  height: 30px; /* Standard size for logos */
+  width: 30px;
+  /* Optional: Add a light filter for contrast against dark card background, especially if logos are dark */
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.4));
+}
+
+.away-team-logo {
+  margin-right: 15px;
+}
+
+.home-team-logo {
+  margin-left: 15px;
+}
+
+.game-title-text {
+  /* Keep title text small between logos */
+  font-size: 1em;
+  color: #f0f0f0;
   font-weight: 700;
+  white-space: nowrap;
+  margin: 0;
+}
+/* Ensure the score line follows the logos */
+.score-status-line {
+  display: block; /* Force the line break after the header */
+  margin-top: 5px;
+}
+/* Adjustments to strong element since it no longer holds the main title */
+.game-info strong {
+  font-size: 1em; /* Reset font size, using specific classes now */
+  display: inline;
+  margin-bottom: 0;
 }
 
 /* Score and Status Line */
 .live-score-status {
-  font-size: 0.9em; /* Keep score and status slightly smaller than title */
-  color: #4a5568;
+  font-size: 0.9em;
+  color: #a0a0a0; /* Secondary gray text */
   font-weight: 500;
 }
 
 .live-score-text {
   font-weight: 700;
-  color: #000;
+  color: #f0f0f0;
   margin-right: 5px;
 }
 
@@ -78,27 +114,26 @@ h1 {
 }
 
 .last-event-text {
-  color: #38a169; /* Highlight last event */
+  color: #48bb78; /* Highlight last event (Green) */
   font-style: italic;
-  margin-top: 8px; /* More separation from stat leaders */
+  margin-top: 8px;
 }
 
 /* --- Watch Link Button --- */
 .watch-link {
-  background-color: #3182ce; /* Primary blue button */
+  /* background is now set by JavaScript */
   color: white;
   padding: 10px 20px;
   text-decoration: none;
   border-radius: 6px;
   font-weight: 600;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
   margin-top: 15px;
   align-self: flex-end;
-  box-shadow: 0 4px 10px rgba(49, 130, 206, 0.3);
+  /* box-shadow is now set by JavaScript */
 }
 .watch-link:hover {
-  background-color: #2b6cb0;
-  box-shadow: 0 6px 15px rgba(49, 130, 206, 0.4);
+  filter: brightness(1.2); /* Brightens the entire gradient on hover */
 }
 
 /* --- Responsive Layout --- */
@@ -109,10 +144,19 @@ h1 {
     align-items: center;
   }
   .game-content {
-    /* Gives the content space when aligned side-by-side */
     max-width: 70%;
   }
   .watch-link {
     margin-top: 0;
+  }
+}
+
+/* Mobile/Small Screen Adjustment: Center logos/title */
+@media (max-width: 599px) {
+  .game-header {
+    justify-content: center;
+  }
+  .game-content {
+    align-items: center;
   }
 }

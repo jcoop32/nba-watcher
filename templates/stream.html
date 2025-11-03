@@ -10,31 +10,53 @@
     />
   </head>
   <body>
-    <div id="overlay">
-      <div class="overlay-content">
-        <div class="warning-icon">🛡️</div>
-        <h2>Ad & Popup Protection</h2>
-        <p>
-          Click the button below to unlock the stream. This helps prevent
-          unwanted ads and popups. Avoid clicking on the video player itself
-          until the stream loads.
-        </p>
-        <button class="unlock-button" onclick="unlockStream()">
-          Unlock Stream
-        </button>
+    <div id="main-container">
+      <div id="stream-panel">
+        <div id="overlay">
+          <div class="overlay-content">
+            <div class="warning-icon">🛡️</div>
+            <h2>Ad & Popup Protection</h2>
+            <p>
+              Click the button below to unlock the stream. This helps prevent
+              unwanted ads and popups. Avoid clicking on the video player itself
+              until the stream loads.
+            </p>
+            <button class="unlock-button" onclick="unlockStream()">
+              Unlock Stream
+            </button>
+          </div>
+        </div>
+
+        <div id="click-absorber"></div>
+
+        <iframe
+          id="full-screen-iframe"
+          src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
+          title="{{ title }}"
+          allow="encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+          sandbox="allow-scripts allow-forms allow-presentation"
+        ></iframe>
+      </div>
+
+      <div id="score-panel">
+        <div id="game-info">
+          <h2>{{ title }}</h2>
+          <p id="live-status">Loading Live Data...</p>
+        </div>
+
+        <div id="boxscore-tabs">
+          <div class="tab-nav"></div>
+
+          <div id="tab-content-container"></div>
+        </div>
       </div>
     </div>
 
-    <div id="click-absorber"></div>
-
-    <iframe
-      id="full-screen-iframe"
-      src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
-      title="{{ title }}"
-      allow="encrypted-media; picture-in-picture; fullscreen"
-      allowfullscreen
-      sandbox="allow-scripts allow-forms allow-presentation"
-    ></iframe>
+    <script>
+      const GAME_ID = '{{ game_id_nba | safe }}';
+      const TEAMS = '{{ teams | safe }}';
+    </script>
 
     <script src="{{ url_for('static', filename='js/stream.js') }}"></script>
   </body>

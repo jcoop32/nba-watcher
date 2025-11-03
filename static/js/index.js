@@ -51,8 +51,40 @@ function updateScoreboard() {
     });
 }
 
+// Function to initialize button gradients
+function initializeButtonGradients() {
+  // List of light hex colors that need black text for contrast
+  const LIGHT_COLORS = ['#FFFFFF', '#C4CED4'];
+
+  document.querySelectorAll('.game-item').forEach(gameItem => {
+    const awayColor = gameItem.dataset.colorAway;
+    const homeColor = gameItem.dataset.colorHome;
+    const button = gameItem.querySelector('.watch-link');
+
+    if (button && awayColor && homeColor) {
+      // Apply linear gradient from away color to home color
+      button.style.background = `linear-gradient(90deg, ${awayColor}, ${homeColor})`;
+      // Apply a consistent box shadow for visual depth
+      button.style.boxShadow = `0 6px 15px rgba(0, 0, 0, 0.4)`;
+
+      if (
+        LIGHT_COLORS.includes(awayColor) ||
+        LIGHT_COLORS.includes(homeColor)
+      ) {
+        button.style.color = '#1a1a1a';
+      } else {
+        button.style.color = '#FFFFFF';
+      }
+    } else {
+    }
+  });
+}
+
 // Run the update function immediately on load
 updateScoreboard();
+
+// Initialize gradients immediately after scores/status update
+initializeButtonGradients();
 
 // Set an interval to poll the server every 20 seconds (20000 milliseconds)
 setInterval(updateScoreboard, 20000);
