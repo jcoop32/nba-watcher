@@ -11,7 +11,7 @@ html {
   color: #f0f0f0;
 }
 
-/* --- 70%/30% Grid Layout --- */
+/* --- 70%/30% Grid Layout (Desktop Default) --- */
 #main-container {
   display: grid;
   grid-template-columns: 70% 30%; /* Default Wide View */
@@ -200,4 +200,35 @@ html {
 
 .tab-content.active {
   display: block;
+}
+
+/* --- MOBILE STYLES (Screen smaller than 900px) --- */
+@media (max-width: 900px) {
+  #main-container {
+    /* Change grid to one column (stack vertical) */
+    grid-template-columns: 1fr;
+    /* Allow content to scroll vertically */
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  #stream-panel {
+    /* Stream takes up fixed height (e.g., 60vh or a defined pixel height) */
+    height: 60vh;
+  }
+
+  #score-panel {
+    /* Scoreboard flows below the stream */
+    border-left: none;
+    border-top: 1px solid #3d3d3d;
+  }
+
+  /* Ensure stream protection overlay stays correctly sized over the stream panel */
+  #overlay,
+  #click-absorber {
+    position: absolute; /* Already set, but confirming */
+    height: 100%;
+    width: 100%;
+  }
 }

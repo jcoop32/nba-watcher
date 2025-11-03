@@ -209,3 +209,5 @@ if (GAME_ID && GAME_ID !== 'None' && GAME_ID !== 'null') {
   // Initial display for scheduled games
   document.getElementById('live-status').textContent = 'Game has not started.';
 }
+
+// sandbox="allow-scripts allow-forms allow-presentation"
