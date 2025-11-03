@@ -27,9 +27,11 @@ def get_basketball_games():
                     "start_time": convert_time(game["when_et"]),
                     "status": f"🔴 {game['status']}" if game["status"] == "LIVE" else game["status"],
                     "teams": teams,
-                    "stream_id": int(game["hds"][0])
+                    "id": int(game["hds"][0]),
+                    "link": game["streams"][0]["link"]
                 }
                 basketball_games.append(game_data)
+                # print(game_data)
 
         return basketball_games
 

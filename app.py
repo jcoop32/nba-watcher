@@ -13,8 +13,9 @@ app = Flask(__name__)
 RAW_GAMES_LIST = get_basketball_games()
 # print(RAW_GAMES_LIST)
 
+BASKETBALL_STREAMS = {stream['id']: stream for stream in RAW_GAMES_LIST}
 
-BASKETBALL_STREAMS = {stream['stream_id']: stream for stream in RAW_GAMES_LIST}
+# print(BASKETBALL_STREAMS)
 
 scoreboard_data_teams = [game["teams"] for game in RAW_GAMES_LIST]
 
@@ -31,15 +32,16 @@ def index():
 
 @app.route('/watch/<stream_id>')
 def iframe_viewer(stream_id):
+    # print(stream_id)
+    # stream_info = BASKETBALL_STREAMS.get(stream_id)
+    # print(stream_info)
+    if stream_id:
+        # link = stream_info.get('id')
+        # print(link)
+        # if not link:
+        #     abort(404, description="Stream found, but embed URL is missing.")
 
-    stream_info = BASKETBALL_STREAMS.get(stream_id)
-
-    if stream_info:
-        id = stream_info.get('id')
-        if not id:
-            abort(404, description="Stream found, but embed URL is missing.")
-
-        return render_template('stream.html', id=id, title=stream_info.get('title'))
+        return render_template('stream.html', id=stream_id)
     else:
         abort(404, description=f"stream ID {stream_id} not found in the basketball list.")
 
