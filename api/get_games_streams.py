@@ -16,10 +16,8 @@ def get_basketball_games():
         data = response.json()
 
         all_games = data
-        # print(all_games)
         basketball_games = []
         for day in all_games["days"]:
-            # basketball_games[day["day_et"]] = []
             for game in day["items"]:
                 title, teams = extract_teams_from_game_title(game["title"])
                 game_data = {
@@ -31,7 +29,6 @@ def get_basketball_games():
                     "link": game["streams"][0]["link"]
                 }
                 basketball_games.append(game_data)
-                # print(game_data)
 
         return basketball_games
 
