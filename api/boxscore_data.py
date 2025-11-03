@@ -2,7 +2,6 @@ import requests
 from nba_api.stats.endpoints import BoxScoreTraditionalV2
 import time
 
-# Global cache for the box score data (improves efficiency)
 _BOXSCORE_CACHE = {}
 BOXSCORE_CACHE_TIMEOUT = 10  # Seconds to cache individual box scores
 
@@ -64,10 +63,6 @@ def get_single_game_boxscore(game_id: str):
                 'fgm_fga': f"{player_data['FGM']}/{player_data['FGA']}",
                 'fg3m_fg3a': f"{player_data['FG3M']}/{player_data['FG3A']}",
             })
-
-        # Get team totals (often in a separate set, but for simplicity, we focus on players here)
-        # Note: A full implementation would calculate or fetch team totals (e.g., PTS, REB, AST for the whole team).
-        # We will leave team_total as None for now to keep the code focused on the player tabs.
 
         # 3. Update Cache
         _BOXSCORE_CACHE[game_id] = {

@@ -10,13 +10,11 @@ current_date = date.today().strftime("%Y-%m-%d")
 
 app = Flask(__name__)
 
-# Global list of games is necessary to keep track of streams for the viewer route
 RAW_GAMES_LIST = []
 _GAMES_LIST_CACHE_TIME = 0
 GAMES_LIST_CACHE_TIMEOUT = 3600
 
 def get_game_list_from_cache_or_api():
-    """Fetches the game list, using the global cache if available."""
     global RAW_GAMES_LIST, _GAMES_LIST_CACHE_TIME
     if not RAW_GAMES_LIST or (time.time() - _GAMES_LIST_CACHE_TIME > GAMES_LIST_CACHE_TIMEOUT):
         RAW_GAMES_LIST = get_basketball_games()
