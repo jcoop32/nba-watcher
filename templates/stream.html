@@ -45,6 +45,17 @@
         display: none;
       }
 
+      /* NEW STYLE FOR CLICK ABSORBER */
+      #click-absorber {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9998; /* Below the main overlay (9999) but above the iframe */
+        display: none; /* Hidden by default */
+      }
+
       .overlay-content {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 40px 50px;
@@ -109,12 +120,15 @@
       </div>
     </div>
 
+    <div id="click-absorber"></div>
+
     <iframe
       id="full-screen-iframe"
       src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
       title="{{ title }}"
       allow="encrypted-media; picture-in-picture; fullscreen"
       allowfullscreen
+      sandbox="allow-scripts allow-forms allow-presentation"
     ></iframe>
 
     <script>
@@ -131,6 +145,15 @@
       function unlockStream() {
         document.getElementById('overlay').classList.add('hidden');
         document.getElementById('full-screen-iframe').classList.add('unlocked');
+
+        // NEW CODE: Temporarily engage a click absorber to catch the first popup-triggering click
+        const absorber = document.getElementById('click-absorber');
+        absorber.style.display = 'block';
+
+        // After 1 second, remove the click absorber, allowing normal interaction.
+        setTimeout(() => {
+          absorber.style.display = 'none';
+        }, 1000);
       }
 
       document.addEventListener(
