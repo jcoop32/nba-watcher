@@ -204,7 +204,7 @@ function fetchAndUpdateBoxScore() {
 if (GAME_ID && GAME_ID !== 'None' && GAME_ID !== 'null') {
   fetchAndUpdateBoxScore();
   // Start polling indefinitely (or until the game ends on its own)
-  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
+  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 15000);
 } else {
   // Initial display for scheduled games
   document.getElementById('live-status').textContent =
