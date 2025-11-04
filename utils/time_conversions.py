@@ -188,3 +188,44 @@ def convert_iso_minutes(iso_time_str):
         return f"{int(match_m_only.group(1))}:00"
 
     return ""
+
+def format_et_to_cst_status(et_datetime_str: str) -> str:
+
+    et_tz = pytz.timezone('America/New_York')
+    cst_tz = pytz.timezone('America/Chicago')
+    input_format_24hr = '%Y-%m-%d %H:%M'
+    output_format_12hr = '%l:%M %p' # e.g., 09:00 PM
+
+    try:
+        # 1. Parse and localize the input time as ET
+        dt_et_naive = datetime.strptime(et_datetime_str, input_format_24hr)
+        dt_et = et_tz.localize(dt_et_naive)
+
+        # 2. Convert to CST
+        dt_cst = dt_et.astimezone(cst_tz)
+
+        # 3. Get the current date in CST for comparison
+        # (Current time is Tuesday, November 4, 2025 at 12:48:19 PM CST)
+        now_cst = datetime.now(cst_tz)
+        today_date = now_cst.date()
+        target_date = dt_cst.date()
+
+        # 4. Determine status and format time
+        cst_time_12hr = dt_cst.strftime(output_format_12hr)
+
+        if target_date == today_date:
+            date_status = 'Today'
+        elif target_date == (today_date + timedelta(days=1)):
+            date_status = 'Tomorrow'
+        else:
+            # If neither, return the full date (YYYY-MM-DD)
+            date_status = target_date.strftime('%Y-%m-%d')
+
+        # 5. Return the final formatted string
+        return f"{date_status} @ {cst_time_12hr}"
+
+    except ValueError:
+        return "Error: Invalid datetime format. Please use 'YYYY-MM-DD HH:MM'."
+    except pytz.exceptions.UnknownTimeZoneError:
+        return "Error: Time zone configuration issue."
+

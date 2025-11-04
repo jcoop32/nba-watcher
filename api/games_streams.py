@@ -2,9 +2,9 @@ import requests
 import json
 from utils.get_team_abbreves import extract_teams_from_game_title
 from utils.time_conversions import convert_time_and_check_day_12hr as convert_time
+from utils.time_conversions import format_et_to_cst_status
 
 API_URL = "https://lotusgamehd.xyz/api-event.php?league=nba"
-
 
 def get_basketball_games():
     try:
@@ -23,6 +23,7 @@ def get_basketball_games():
                 game_data = {
                     "title": title,
                     "start_time": convert_time(game["when_et"]),
+                    "game_start": format_et_to_cst_status(game["when_et"]),
                     "status": f"🔴 {game['status']}" if game["status"] == "LIVE" else game["status"],
                     "teams": teams,
                     "id": int(game["hds"][0]),

@@ -43,11 +43,11 @@
                   sb_data[game.teams]["home_score"] }}
                 </span>
                 <span class="game-details" data-status>
-                  | {{ sb_data[game.teams]["game_status"] }}
+                  | {{ game.game_start }}
                 </span>
                 {% else %}
                 <span class="game-details" data-status>
-                  | {{ sb_data[game.teams]["game_status"] }}
+                  | {{ game.game_start }}
                 </span>
                 {% endif %}
               </span>
@@ -57,15 +57,6 @@
               <span>{{ sb_data[game.teams]["best_stats_away"] }}</span>
               <span> | </span>
               <span>{{ sb_data[game.teams]["best_stats_home"] }}</span>
-            </div>
-
-            {% if sb_data[game.teams]["last_game_event"] %}
-            <div class="game-details last-event-text">
-              Last Event: {{ sb_data[game.teams]["last_game_event"] }}
-            </div>
-            {% endif %} {% else %}
-            <div class="game-details">
-              <span></span>
             </div>
             {% endif %}
           </div>
