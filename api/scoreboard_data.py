@@ -24,29 +24,29 @@ def get_scoreboard_data(upcoming_games: list):
         if teams in today_game_codes:
             game = next(g for g in all_game_scoreboard if teams in g["gameCode"])
 
-            last_game_event = "Game has not started or data is unavailable."
-            game_started = game["gameStatus"] > 1
+            # last_game_event = "Game has not started or data is unavailable."
+            # game_started = game["gameStatus"] > 1
 
-            if game_started:
-                try:
-                    game_id = game["gameId"]
-                    pbp = PlayByPlay(game_id=game_id).get_dict()
-                    plays = pbp.get("playByPlay", {}).get("actions", [])
+            # if game_started:
+            #     try:
+            #         game_id = game["gameId"]
+            #         pbp = PlayByPlay(game_id=game_id).get_dict()
+            #         plays = pbp.get("playByPlay", {}).get("actions", [])
 
-                    if plays:
-                        last_game_event = plays[-1].get("description", "Last play description unavailable.")
-                    else:
-                        last_game_event = "Game in progress, no plays recorded yet."
-                except Exception:
-                    last_game_event = "Could not fetch last event due to an API error."
+            #         if plays:
+            #             last_game_event = plays[-1].get("description", "Last play description unavailable.")
+            #         else:
+            #             last_game_event = "Game in progress, no plays recorded yet."
+            #     except Exception:
+            #         last_game_event = "Could not fetch last event due to an API error."
 
             try:
                 home_leader = game["gameLeaders"]["homeLeaders"]
                 away_leader = game["gameLeaders"]["awayLeaders"]
                 home_score = game["homeTeam"]["score"]
                 away_score = game["awayTeam"]["score"]
-                period = game["period"]
-                game_clock = game["gameClock"]
+                # period = game["period"]
+                # game_clock = game["gameClock"]
 
                 data = {
                     "game_status": convert_et_to_cst_conditional(game["gameStatusText"]),
@@ -56,9 +56,10 @@ def get_scoreboard_data(upcoming_games: list):
                     "best_stats_away": f'{away_leader["name"]} - {away_leader["points"]}pts - {away_leader["rebounds"]}rebs - {away_leader["assists"]}asts',
                     "home_score": home_score,
                     "away_score": away_score,
-                    "period": period,
-                    "game_clock": game_clock,
-                    "last_game_event": last_game_event,
+                    # "period": period,
+                    # "game_clock": game_clock,
+                    # "last_game_event": last_game_event,
+                    "game_id": game["gameId"]
                 }
             except KeyError:
                 # If game leaders are missing
@@ -70,22 +71,24 @@ def get_scoreboard_data(upcoming_games: list):
                     "best_stats_away": "N/A",
                     "home_score": game["homeTeam"]["score"],
                     "away_score": game["awayTeam"]["score"],
-                    "period": game["period"],
-                    "game_clock": game["gameClock"],
-                    "last_game_event": last_game_event,
+                    # "period": game["period"],
+                    # "game_clock": game["gameClock"],
+                    # "last_game_event": last_game_event,
+                    "game_id": game["gameId"]
                 }
         else:
             # Not found → game is likely tomorrow or later
             data = {
-                "game_status": "Scheduled (no data yet)",
+                "game_status": "Tommorrow",
                 "game_started_yet": False,
                 "best_stats_home": "N/A",
                 "best_stats_away": "N/A",
                 "home_score": 0,
                 "away_score": 0,
-                "period": 0,
-                "game_clock": "",
-                "last_game_event": "Game has not started or data is unavailable.",
+                # "period": 0,
+                # "game_clock": "",
+                # "last_game_event": "Game has not started or data is unavailable.",
+                "game_id": None
             }
 
         game_scoreboards[teams] = data

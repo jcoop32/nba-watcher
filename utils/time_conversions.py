@@ -168,3 +168,24 @@ def convert_et_to_cst_conditional(input_string: str) -> str:
 
     return f"{formatted_cst_time} {target_time_cst.strftime('%Z')}"
 
+
+def convert_iso_minutes(iso_time_str):
+    """Converts ISO 8601 duration string (e.g., 'PT25M01.00S') to M:SS format."""
+    if not isinstance(iso_time_str, str) or not iso_time_str.startswith('PT'):
+        return ""
+
+    # Pattern to match Minutes and Seconds
+    match = re.match(r'PT(\d+)M(\d+)\.', iso_time_str)
+
+    if match:
+        minutes = int(match.group(1))
+        # Take the integer part of seconds
+        seconds = int(match.group(2))
+        return f"{minutes}:{seconds:02}"
+
+    # Fallback for minutes only (e.g., 'PT1M')
+    match_m_only = re.match(r'PT(\d+)M', iso_time_str)
+    if match_m_only:
+        return f"{int(match_m_only.group(1))}:00"
+
+    return ""

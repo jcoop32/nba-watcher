@@ -137,7 +137,7 @@ function fetchAndUpdateBoxScore() {
         'tab-content-container',
       );
 
-      liveStatusElement.textContent = 'Live Box Score';
+      liveStatusElement.textContent = 'Box Score';
 
       // If the structure is empty (first load), build the tabs and content
       if (tabNav.children.length === 0) {
@@ -207,7 +207,8 @@ if (GAME_ID && GAME_ID !== 'None' && GAME_ID !== 'null') {
   boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
 } else {
   // Initial display for scheduled games
-  document.getElementById('live-status').textContent = 'Game has not started.';
+  document.getElementById('live-status').textContent =
+    'Game has not started.' + GAME_ID;
 }
 
 // sandbox="allow-scripts allow-forms allow-presentation"

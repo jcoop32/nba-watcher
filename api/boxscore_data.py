@@ -1,9 +1,40 @@
 import requests
-from nba_api.stats.endpoints import BoxScoreTraditionalV2
 import time
+from utils.time_conversions import convert_iso_minutes
 
 _BOXSCORE_CACHE = {}
-BOXSCORE_CACHE_TIMEOUT = 10  # Seconds to cache individual box scores
+BOXSCORE_CACHE_TIMEOUT = 15
+BOXSCORE_URL_TEMPLATE = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{game_id}.json"
+
+# DEFINE BROWSER HEADERS to prevent 403 errors
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json'
+}
+
+def _process_player_stats(player_data):
+    """Formats raw player data for display based on the provided JSON structure."""
+    stats = player_data.get('statistics', {})
+
+    # Parse complex minutes string
+    minutes_iso = stats.get('minutes', "")
+    minutes_formatted = convert_iso_minutes(minutes_iso)
+
+    # Return a structured dict of the required fields
+    return {
+        'name': player_data.get('name', ''),
+        'min': minutes_formatted,
+        'pts': stats.get('points', 0),
+        'reb': stats.get('reboundsTotal', 0),
+        'ast': stats.get('assists', 0),
+        'stl': stats.get('steals', 0),
+        'blk': stats.get('blocks', 0),
+        'to': stats.get('turnovers', 0),
+        # Convert FGM/FGA and 3PTM/3PTA into display strings
+        'fgm_fga': f"{stats.get('fieldGoalsMade', 0)}/{stats.get('fieldGoalsAttempted', 0)}",
+        'fg3m_fg3a': f"{stats.get('threePointersMade', 0)}/{stats.get('threePointersAttempted', 0)}",
+    }
+
 
 def get_single_game_boxscore(game_id: str):
     global _BOXSCORE_CACHE
@@ -13,58 +44,50 @@ def get_single_game_boxscore(game_id: str):
         return _BOXSCORE_CACHE[game_id]['data']
 
     # 2. Fetch Fresh Data
+    url = BOXSCORE_URL_TEMPLATE.format(game_id=game_id)
+
     try:
-        # Fetch Traditional Box Score
-        boxscore = BoxScoreTraditionalV2(game_id=game_id).get_dict()
+        response = requests.get(url, headers=HEADERS, timeout=5)
+        response.raise_for_status()
+        boxscore = response.json()
 
-        # Extract Player Stats and Game Info
-        player_stats_list = boxscore.get('resultSets', [])[0].get('rowSet', [])
+        # 3. Parse Data
+        game_data = boxscore.get('game', {})
+        home_team = game_data.get('homeTeam', {})
+        away_team = game_data.get('awayTeam', {})
 
-        # This is a fixed column list based on the NBA API response structure
-        columns = [
-            "PLAYER_ID", "PLAYER_NAME", "MIN", "FGM", "FGA", "FG_PCT", "FG3M", "FG3A", "FG3_PCT",
-            "FTM", "FTA", "FT_PCT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TO", "PF", "PTS",
-            "TEAM_ID", "TEAM_ABBREVIATION"
-        ]
-
-        # Restructure data into a more readable format keyed by team
         processed_data = {}
 
-        for player_stats in player_stats_list:
-            player_data = dict(zip(columns, player_stats))
-            team_tricode = player_data['TEAM_ABBREVIATION']
+        # Helper to process team and filter for players who have played
+        def process_team(team_data):
+            tricode = team_data.get('teamTricode')
+            if not tricode:
+                return
 
-            # Format minutes (MIN)
-            minutes = player_data.get('MIN')
-            if minutes is not None:
-                # Convert decimal minutes (e.g., 30.5) to M:SS format
-                min_int = int(minutes)
-                sec_frac = int((minutes - min_int) * 60)
-                player_data['MIN'] = f"{min_int}:{sec_frac:02}"
-            else:
-                 player_data['MIN'] = ""
+            # Filter players who have played (status='ACTIVE' and played='1')
+            active_players = [
+                _process_player_stats(p) for p in team_data.get('players', [])
+                if p.get('status') == 'ACTIVE' and p.get('played') == '1'
+            ]
 
-            if team_tricode not in processed_data:
-                processed_data[team_tricode] = {
-                    'players': [],
-                    'team_total': None
-                }
+            # Helper function to convert M:SS format to seconds for reliable sorting
+            def time_to_seconds(time_str):
+                try:
+                    m, s = map(int, time_str.split(':'))
+                    return m * 60 + s
+                except ValueError:
+                    return 0
 
-            # Use only necessary fields for display
-            processed_data[team_tricode]['players'].append({
-                'name': player_data['PLAYER_NAME'],
-                'min': player_data['MIN'],
-                'pts': player_data['PTS'],
-                'reb': player_data['REB'],
-                'ast': player_data['AST'],
-                'stl': player_data['STL'],
-                'blk': player_data['BLK'],
-                'to': player_data['TO'],
-                'fgm_fga': f"{player_data['FGM']}/{player_data['FGA']}",
-                'fg3m_fg3a': f"{player_data['FG3M']}/{player_data['FG3A']}",
-            })
+            # Sort players by minutes (MIN) descending
+            active_players.sort(key=lambda p: time_to_seconds(p['min']), reverse=True)
 
-        # 3. Update Cache
+
+            processed_data[tricode] = { 'players': active_players }
+
+        process_team(home_team)
+        process_team(away_team)
+
+        # 4. Update Cache
         _BOXSCORE_CACHE[game_id] = {
             'data': processed_data,
             'timestamp': time.time()
@@ -72,7 +95,9 @@ def get_single_game_boxscore(game_id: str):
 
         return processed_data
 
-    except requests.exceptions.RequestException:
-        return {"error": "API request failed for Box Score."}
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+             return {"error": "Box score not found (Game ID may be incorrect or game not yet live)."}
+        return {"error": f"HTTP Error fetching box score: {e.response.status_code}"}
     except Exception as e:
-        return {"error": f"Error processing box score data: {e}"}
+        return {"error": f"Error processing box score data: {e.__class__.__name__}"}

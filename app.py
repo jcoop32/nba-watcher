@@ -47,7 +47,6 @@ def index():
 def api_scoreboard():
     games_list = get_game_list_from_cache_or_api()
     scoreboard_data_teams = [game["teams"] for game in games_list]
-
     scoreboard_data = get_scoreboard_data(scoreboard_data_teams)
 
     response_data = {}
@@ -74,12 +73,7 @@ def iframe_viewer(stream_id):
     if stream_info:
         scoreboard_data_raw = get_scoreboard_data([stream_info['teams']])
 
-        game_id_nba = None
-        for game_item in scoreboard_data_raw.get('scoreboard', {}).get('games', []):
-            if stream_info['teams'] in game_item['gameCode']:
-                game_id_nba = game_item['gameId']
-                break
-
+        game_id_nba = scoreboard_data_raw.get(stream_info.get("teams")).get("game_id")
 
         id = stream_info.get('id')
         if not id:
