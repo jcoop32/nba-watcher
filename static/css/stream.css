@@ -187,6 +187,11 @@ html {
   text-align: right;
 }
 
+/* NEW: Highlight for players currently on court */
+.boxscore-table tr.oncourt td {
+  background-color: #401818; /* Dark, subtle red */
+}
+
 .boxscore-table td:first-child,
 .boxscore-table th:first-child {
   text-align: left;

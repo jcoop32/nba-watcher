@@ -39,6 +39,7 @@ document.addEventListener(
 
 // --- Box Score & Polling Logic ---
 
+// Global variable to hold the polling interval ID
 let boxScoreIntervalId = null;
 
 // Function to handle tab switching
@@ -84,9 +85,23 @@ function generateBoxScoreHTML(teamTricode, teamData) {
   });
 
   players.forEach(p => {
+    let playerName = p.name;
+    let rowClass = ''; // Initialize row class
+
+    // 1. Add class if on court (NEW LOGIC)
+    if (p.is_oncourt) {
+      rowClass = 'oncourt';
+    }
+
+    // 2. Wrap in <strong> if a starter (UNMODIFIED LOGIC)
+    if (p.is_starter) {
+      playerName = `<strong>*${playerName}</strong>`;
+    }
+
+    // The <tr> now uses the dynamic class and the player name without the asterisk
     html += `
-            <tr>
-                <td>${p.name}</td>
+            <tr class="${rowClass}">
+                <td>${playerName}</td>
                 <td>${p.min}</td>
                 <td>${p.pts}</td>
                 <td>${p.reb}</td>
@@ -121,7 +136,9 @@ function fetchAndUpdateBoxScore() {
   fetch(`/api/boxscore/${GAME_ID}`)
     .then(response => {
       if (!response.ok) {
-        throw new Error('Server error when fetching data.');
+        throw new Error(
+          'Server error when fetching data. Status: ' + response.status,
+        );
       }
       return response.json();
     })
@@ -201,14 +218,11 @@ function fetchAndUpdateBoxScore() {
 }
 
 // Check if GAME_ID exists before starting polling
-if (GAME_ID && GAME_ID !== 'None' && GAME_ID !== 'null') {
+if (typeof GAME_ID !== 'undefined') {
   fetchAndUpdateBoxScore();
   // Start polling indefinitely (or until the game ends on its own)
-  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 15000);
+  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
 } else {
-  // Initial display for scheduled games
-  document.getElementById('live-status').textContent =
-    'Game has not started.' + GAME_ID;
+  // This case should rarely happen if the JS link works, but is here as a fallback
+  document.getElementById('live-status').textContent = 'Initialization Error.';
 }
-
-// sandbox="allow-scripts allow-forms allow-presentation"

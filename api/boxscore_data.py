@@ -33,6 +33,9 @@ def _process_player_stats(player_data):
         # Convert FGM/FGA and 3PTM/3PTA into display strings
         'fgm_fga': f"{stats.get('fieldGoalsMade', 0)}/{stats.get('fieldGoalsAttempted', 0)}",
         'fg3m_fg3a': f"{stats.get('threePointersMade', 0)}/{stats.get('threePointersAttempted', 0)}",
+        # NEW FIELDS FOR INDICATORS
+        'is_starter': player_data.get('starter') == '1',
+        'is_oncourt': player_data.get('oncourt') == '1',
     }
 
 

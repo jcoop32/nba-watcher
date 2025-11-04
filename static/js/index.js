@@ -23,7 +23,7 @@ function updateScoreboard() {
               '.game-details[data-status]',
             );
             // Target the last event element
-            const lastEventElement = gameItem.querySelector('.last-event-text');
+            // const lastEventElement = gameItem.querySelector('.last-event-text');
 
             if (gameData.game_started_yet) {
               // Update the score if the game is live or finished
@@ -35,13 +35,14 @@ function updateScoreboard() {
               statusElement.textContent = `| ${gameData.game_status}`;
 
               // Update the last game event text
-              if (lastEventElement) {
-                lastEventElement.textContent = `Last Event: ${gameData.last_game_event}`;
-              }
-            } else {
-              // Update the status for scheduled games (in case time changes)
-              statusElement.textContent = `| ${gameData.today_or_tomorrow} ${gameData.game_status}`;
+              // if (lastEventElement) {
+              //   lastEventElement.textContent = `Last Event: ${gameData.last_game_event}`;
+              // }
             }
+            // else {
+            //   // Update the status for scheduled games (in case time changes)
+            //   statusElement.textContent = `| ${gameData.today_or_tomorrow} ${gameData.game_status}`;
+            // }
           }
         }
       }

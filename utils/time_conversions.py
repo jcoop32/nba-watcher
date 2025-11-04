@@ -96,12 +96,11 @@ def get_game_day_status(game_start_time_str: str) -> str:
 
         if target_date_cst == current_date_cst:
             # Game is today
-            return "" # Return empty string
+            return f"Today @ {formatted_time}"
 
         elif target_date_cst == tomorrow_date_cst:
             # Game is tomorrow
             return f"Tomorrow @ {formatted_time}"
-
         else:
             # Game is in the past, or further in the future (e.g., in two days or more)
             return "" # Return empty string for any other case, prioritizing today/tomorrow
