@@ -4,171 +4,59 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Watching: {{ title }}</title>
-    <style>
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        background-color: #000;
-        font-family: 'Inter', -apple-system, sans-serif;
-      }
-
-      #full-screen-iframe {
-        border: none;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      #full-screen-iframe.unlocked {
-        pointer-events: auto;
-      }
-
-      #overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        cursor: pointer;
-      }
-
-      #overlay.hidden {
-        display: none;
-      }
-
-      /* NEW STYLE FOR CLICK ABSORBER */
-      #click-absorber {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9998; /* Below the main overlay (9999) but above the iframe */
-        display: none; /* Hidden by default */
-      }
-
-      .overlay-content {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 40px 50px;
-        border-radius: 16px;
-        text-align: center;
-        color: white;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        max-width: 500px;
-      }
-
-      .overlay-content h2 {
-        margin: 0 0 15px 0;
-        font-size: 28px;
-        font-weight: 700;
-      }
-
-      .overlay-content p {
-        margin: 0 0 25px 0;
-        font-size: 16px;
-        opacity: 0.95;
-        line-height: 1.5;
-      }
-
-      .unlock-button {
-        background-color: #48bb78;
-        color: white;
-        border: none;
-        padding: 14px 32px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-      }
-
-      .unlock-button:hover {
-        background-color: #38a169;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(72, 187, 120, 0.5);
-      }
-
-      .warning-icon {
-        font-size: 48px;
-        margin-bottom: 10px;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/stream.css') }}"
+    />
   </head>
   <body>
-    <div id="overlay">
-      <div class="overlay-content">
-        <div class="warning-icon">🛡️</div>
-        <h2>Ad & Popup Protection</h2>
-        <p>
-          Click the button below to unlock the stream. This helps prevent
-          unwanted ads and popups. Avoid clicking on the video player itself
-          until the stream loads.
-        </p>
-        <button class="unlock-button" onclick="unlockStream()">
-          Unlock Stream
-        </button>
+    <div id="main-container">
+      <div id="stream-panel">
+        <div id="overlay">
+          <div class="overlay-content">
+            <div class="warning-icon">🛡️</div>
+            <h2>Ad & Popup Protection</h2>
+            <p>
+              Click the button below to unlock the stream. This helps prevent
+              unwanted ads and popups. Avoid clicking on the video player itself
+              until the stream loads.
+            </p>
+            <button class="unlock-button" onclick="unlockStream()">
+              Unlock Stream
+            </button>
+          </div>
+        </div>
+
+        <div id="click-absorber"></div>
+
+        <iframe
+          id="full-screen-iframe"
+          src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
+          title="{{ title }}"
+          allow="encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <div id="score-panel">
+        <div id="game-info">
+          <h2>{{ title }}</h2>
+          <p id="live-status">Loading Live Data...</p>
+        </div>
+
+        <div id="boxscore-tabs">
+          <div class="tab-nav"></div>
+
+          <div id="tab-content-container"></div>
+        </div>
       </div>
     </div>
 
-    <div id="click-absorber"></div>
-
-    <iframe
-      id="full-screen-iframe"
-      src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
-      title="{{ title }}"
-      allow="encrypted-media; picture-in-picture; fullscreen"
-      allowfullscreen
-      sandbox="allow-scripts allow-forms allow-presentation"
-    ></iframe>
-
     <script>
-      var popupBlocked = false;
-
-      window.open = function () {
-        if (!popupBlocked) {
-          console.log('Popup blocked by protection script');
-          popupBlocked = true;
-        }
-        return null;
-      };
-
-      function unlockStream() {
-        document.getElementById('overlay').classList.add('hidden');
-        document.getElementById('full-screen-iframe').classList.add('unlocked');
-
-        // NEW CODE: Temporarily engage a click absorber to catch the first popup-triggering click
-        const absorber = document.getElementById('click-absorber');
-        absorber.style.display = 'block';
-
-        // After 1 second, remove the click absorber, allowing normal interaction.
-        setTimeout(() => {
-          absorber.style.display = 'none';
-        }, 1000);
-      }
-
-      document.addEventListener(
-        'click',
-        function (e) {
-          if (e.target.tagName === 'A' && e.target.target === '_blank') {
-            if (!e.target.href.includes('lotusgamehd.xyz')) {
-              e.preventDefault();
-              console.log('External link blocked:', e.target.href);
-              return false;
-            }
-          }
-        },
-        true,
-      );
+      const GAME_ID = '{{ game_id_nba | safe }}';
+      const TEAMS = '{{ teams | safe }}';
     </script>
+
+    <script src="{{ url_for('static', filename='js/stream.js') }}"></script>
   </body>
 </html>

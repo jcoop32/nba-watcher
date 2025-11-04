@@ -4,84 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Basketball Streams</title>
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f4f7f9;
-      }
-      .container {
-        max-width: 900px;
-        margin: 0 auto;
-      }
-      h1 {
-        color: #1a202c;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        font-weight: 700;
-      }
-      .game-list {
-        list-style: none;
-        padding: 0;
-      }
-      .game-item {
-        background: white;
-        margin-bottom: 12px;
-        padding: 15px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        transition: transform 0.2s;
-      }
-      .game-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-      }
-      .game-info strong {
-        color: #3182ce;
-        font-size: 1.15em;
-        display: block;
-        margin-bottom: 5px;
-      }
-      .game-details {
-        font-size: 0.9em;
-        color: #4a5568;
-        margin-top: 5px;
-      }
-      .watch-link {
-        background-color: #48bb78; /* Green button */
-        color: white;
-        padding: 8px 15px;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: background-color 0.3s;
-        margin-top: 10px;
-        align-self: flex-end;
-      }
-      .watch-link:hover {
-        background-color: #38a169;
-      }
-      .live-status {
-        color: #e53e3e;
-        font-weight: bold;
-        margin-right: 10px;
-      }
-      @media (min-width: 600px) {
-        .game-item {
-          flex-direction: row;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .watch-link {
-          margin-top: 0;
-        }
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/index.css') }}"
+    />
   </head>
   <body>
     <div class="container">
@@ -89,14 +15,43 @@
       {% if games %}
       <ul class="game-list">
         {% for game in games %}
-        <li class="game-item">
+        <li
+          class="game-item {% if sb_data[game.teams][game_started_yet] %}live{% endif %}"
+          data-teams="{{ game.teams }}"
+          data-color-away="{{ game.away_color }}"
+          data-color-home="{{ game.home_color }}"
+        >
           <div class="game-content">
-            <strong
-              >{{ game.title }}
-              <span class="game-details">
-                | {{ sb_data[game.teams]["today_or_tomorrow"] }} {{
-                sb_data[game.teams]["game_status"] }}</span
-              >
+            <div class="game-header">
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.away_logo }}/primary/L/logo.svg"
+                alt="Away Logo"
+                class="team-logo away-team-logo"
+              />
+              <strong class="game-title-text">{{ game.title }}</strong>
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.home_logo }}/primary/L/logo.svg"
+                alt="Home Logo"
+                class="team-logo home-team-logo"
+              />
+            </div>
+            <strong class="score-status-line">
+              <span class="live-score-status">
+                {% if sb_data[game.teams]["game_started_yet"] %}
+                <span class="live-score-text">
+                  {{ sb_data[game.teams]["away_score"] }} - {{
+                  sb_data[game.teams]["home_score"] }}
+                </span>
+                <span class="game-details" data-status>
+                  | {{ sb_data[game.teams]["game_status"] }}
+                </span>
+                {% else %}
+                <span class="game-details" data-status>
+                  | {{ sb_data[game.teams]["today_or_tomorrow"] }} {{
+                  sb_data[game.teams]["game_status"] }}
+                </span>
+                {% endif %}
+              </span>
             </strong>
             {% if sb_data[game.teams]["game_started_yet"] %}
             <div class="game-details">
@@ -104,7 +59,12 @@
               <span> | </span>
               <span>{{ sb_data[game.teams]["best_stats_home"] }}</span>
             </div>
-            {% else %}
+
+            {% if sb_data[game.teams]["last_game_event"] %}
+            <div class="game-details last-event-text">
+              Last Event: {{ sb_data[game.teams]["last_game_event"] }}
+            </div>
+            {% endif %} {% else %}
             <div class="game-details">
               <span></span>
             </div>
@@ -115,7 +75,6 @@
             class="watch-link"
             target="_blank"
           >
-            <!-- <style></style> -->
             Watch Stream
           </a>
         </li>
@@ -128,5 +87,7 @@
       </p>
       {% endif %}
     </div>
+
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
   </body>
 </html>
