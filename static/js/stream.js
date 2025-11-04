@@ -213,7 +213,8 @@ function fetchAndUpdateBoxScore() {
     })
     .catch(error => {
       console.error('Error fetching box score:', error);
-      liveStatusElement.textContent = 'Error with Scoreboard API';
+      liveStatusElement.textContent =
+        'Game has not Started (or error with Scoreboard API)';
     });
 }
 

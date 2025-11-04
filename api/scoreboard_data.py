@@ -31,7 +31,7 @@ def get_scoreboard_data(upcoming_games: list):
                 away_score = game["awayTeam"]["score"]
 
                 data = {
-                    "game_status": convert_et_to_cst_conditional(game["gameStatusText"]),
+                    "game_status": f"Today @ {convert_et_to_cst_conditional(game['gameStatusText'])}",
                     "game_started_yet": has_game_started(game["gameTimeUTC"]),
                     "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
                     "best_stats_home": f'{home_leader["name"]} - {home_leader["points"]}pts - {home_leader["rebounds"]}rebs - {home_leader["assists"]}asts',
@@ -43,7 +43,7 @@ def get_scoreboard_data(upcoming_games: list):
             except KeyError:
                 # If game leaders are missing
                 data = {
-                    "game_status": convert_et_to_cst_conditional(game["gameStatusText"]),
+                    "game_status": f"Today @ {convert_et_to_cst_conditional(game['gameStatusText'])}",
                     "game_started_yet": has_game_started(game["gameTimeUTC"]),
                     "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
                     "best_stats_home": "N/A",

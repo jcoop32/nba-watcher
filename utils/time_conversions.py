@@ -96,19 +96,19 @@ def get_game_day_status(game_start_time_str: str) -> str:
 
         if target_date_cst == current_date_cst:
             # Game is today
-            return f"Today @ {formatted_time}"
+            return f"Today @ {formatted_time} CST"
 
         elif target_date_cst == tomorrow_date_cst:
             # Game is tomorrow
-            return f"Tomorrow @ {formatted_time}"
+            return f"Tomorrow @ {formatted_time} CST"
         else:
             # Game is in the past, or further in the future (e.g., in two days or more)
-            return "" # Return empty string for any other case, prioritizing today/tomorrow
+            return ""
 
     except ValueError:
         # Handle cases where the time string is in an unexpected format
         print(f"Error: Could not parse time string '{game_start_time_str}'.")
-        return "N/A" # Return a safe default string for errors
+        return "N/A"
 
 
 def convert_et_to_cst_conditional(input_string: str) -> str:
