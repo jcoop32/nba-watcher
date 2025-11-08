@@ -14,11 +14,20 @@ A lightweight Flask web application for tracking and streaming live NBA games. T
 
 ---
 
-## 🛠 Prerequisites
+## 🛠 Prerequisites: Install Docker
 
-This project is configured to run easily using **Docker**. You must have [Docker Engine](https://www.docker.com/products/docker-desktop/) installed on your machine.
+This project is configured to run easily using **Docker**. You must have Docker Engine (typically via **Docker Desktop**) installed on your machine. Follow the instructions for your specific operating system:
 
----
+### 1. Install Docker on macOS
+
+The simplest method for macOS users who have the [Homebrew](https://brew.sh/) package manager installed is to use Homebrew Cask to install Docker Desktop:
+
+```bash
+# Install Docker Desktop via Homebrew Cask
+brew install --cask docker
+# Launch the application
+open /Applications/Docker.app
+```
 
 ## 🚀 Getting Started (Docker)
 
