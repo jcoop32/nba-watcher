@@ -1,4 +1,4 @@
-# 🏀 NBA Watcher
+# NBA Watcher
 
 A lightweight Flask web application for tracking and streaming live NBA games. The application displays a list of today's or tomorrow's games, provides live scores and key player stats, and includes an embeddable stream viewer with box score updates.
 
