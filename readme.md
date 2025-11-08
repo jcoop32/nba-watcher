@@ -18,7 +18,7 @@ A lightweight Flask web application for tracking and streaming live NBA games. T
 
 This project is configured to run easily using **Docker**. You must have Docker Engine (typically via **Docker Desktop**) installed on your machine. Follow the instructions for your specific operating system:
 
-### 1. Install Docker on macOS
+## 1. Install Docker on macOS
 
 The simplest method for macOS users who have the [Homebrew](https://brew.sh/) package manager installed is to use Homebrew Cask to install Docker Desktop:
 
@@ -28,6 +28,55 @@ brew install --cask docker
 # Launch the application
 open /Applications/Docker.app
 ```
+
+## 2. Install Docker on Windows
+
+Download and Install Docker Desktop: Download the installer from the official Docker Desktop [website](https://www.docker.com/products/docker-desktop/).
+
+Enable WSL 2: During installation, ensure the option to Enable WSL 2 is selected for optimal performance. You may need to run `wsl --install` in PowerShell as an administrator if WSL is not already enabled.
+
+Start Docker: Launch Docker Desktop after installation and wait for it to fully start.
+
+---
+
+## 3. Install Docker on Linux (e.g., Ubuntu/Debian)
+
+While Docker Engine (CLI only) is available via package managers, Docker Desktop for Linux is highly recommended for a full user experience.
+
+### A. Docker Desktop (Recommended):
+
+Download the correct .deb or .rpm package from the official Docker Desktop for Linux documentation.
+
+Install the package using your system's package manager (e.g., `sudo apt install ./docker-desktop-VERSION-ARCH.deb`).
+
+Start the application.
+
+### B. Docker Engine (CLI Only):
+
+```bash
+sudo apt update
+```
+
+#### Install Docker Engine (docker.io on Ubuntu/Debian)
+
+```bash
+sudo apt install -y docker.io
+```
+
+#### Start and enable the Docker service
+
+```bash
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+#### Optional: Add user to 'docker' group (log out/in to apply)
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+---
 
 ## 🚀 Getting Started (Docker)
 
