@@ -89,4 +89,4 @@ def iframe_viewer(stream_id):
 
 if __name__ == '__main__':
     _GAMES_LIST_CACHE_TIME = time.time()
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)
