@@ -1,3 +1,5 @@
+# jcoop32/nba-watcher/nba-watcher-a4c77f1f60af3f329fe1623e00dceda3da0d2c7f/db_service.py
+
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -9,55 +11,47 @@ SUPABASE_URL: str = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY")
 TABLE_NAME = "nba_game_data_2025_26" # Ensure this matches your table name
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("Error: SUPABASE_URL or SUPABASE_KEY not found in .env file.")
-    exit()
-
-try:
-    # Synchronous client initialized
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("Supabase client initialized successfully.")
-except Exception as e:
-    print(f"Error initializing Supabase client: {e}")
-    exit()
-
-
-def get_games_to_scrape(limit: int = 1300) -> list:
+# --- NEW FUNCTION: Lazy Client Getter ---
+def get_supabase_client() -> Client:
+    """Initializes and returns the Supabase client when called."""
     try:
-        print(f"[DB] Fetching up to {limit} rows where iframe_url IS NULL...")
-        response = (
-            supabase.table(TABLE_NAME)
-            .select("id, replay_url")
-            .is_("iframe_url", None)   # Filter for rows where iframe_url IS NULL
-            .limit(limit)
-            .execute()
-        )
-        print(f"[DB] Fetch successful. Rows returned: {len(response.data)}")
-        return response.data
-    except Exception as e:
-        print(f"[DB Error fetching NULL games]: {e}")
-        return []
-# ----------------------------------------
+        if not SUPABASE_URL or not SUPABASE_KEY:
+             raise ValueError("Supabase URL or Key is missing from environment.")
 
+        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        return client
+    except Exception as e:
+        # Re-raise the error so the calling function (bulk_upsert) can handle the connection failure
+        raise Exception(f"Failed to initialize Supabase client: {e}")
+
+# --- UPDATED: Functions now use the client getter and selective UPSERT ---
 
 def bulk_upsert_game_data():
-    data_list = scrape_nba_schedule()
+    try:
+        supabase = get_supabase_client()
+    except Exception as e:
+        print(f"❌ Aborting bulk upsert due to DB connection failure: {e}")
+        return
 
-    # We rely on scrape_nba_schedule setting 'iframe_url': None (or omitting it)
+    data_list = scrape_nba_schedule()
 
     if not data_list:
         print("No schedule data scraped for upsert. Exiting.")
         return
 
     num_rows = len(data_list)
-    # The composite key for uniqueness check
-    conflict_cols = "replay_url"
+    conflict_cols = "game_date,away_team,home_team"
 
-    print(f"\n--- Starting Bulk UPSERT for {num_rows} schedule records into '{TABLE_NAME}' ---")
+    columns_to_update = "game_date,replay_url,away_team,away_score,home_team,home_score,notes"
+
+    print(f"\n--- Starting SELECTIVE Bulk UPSERT for {num_rows} schedule records ---")
+    print(f"   (Updating ONLY: {columns_to_update})")
+
 
     try:
         response = (
             supabase.table(TABLE_NAME)
+            .select(columns_to_update)
             .upsert(data_list, on_conflict=conflict_cols)
             .execute()
         )
@@ -73,8 +67,38 @@ def bulk_upsert_game_data():
         print(f"❌ Critical Error during initial bulk UPSERT: {e}")
         print("HINT: Ensure the conflict columns form a Unique Constraint on the table.")
 
+bulk_upsert_game_data()
 
-def get_all_games():
+def get_games_to_scrape(limit: int = 1300) -> list:
+    try:
+        supabase = get_supabase_client()
+    except Exception as e:
+        print(f"❌ Aborting DB query due to connection failure: {e}")
+        return []
+
+    try:
+        print(f"[DB] Fetching up to {limit} rows where iframe_url IS NULL...")
+        response = (
+            supabase.table(TABLE_NAME)
+            .select("id, replay_url")
+            .is_("iframe_url", None)
+            .limit(limit)
+            .execute()
+        )
+        print(f"[DB] Fetch successful. Rows returned: {len(response.data)}")
+        return response.data
+    except Exception as e:
+        print(f"[DB Error fetching NULL games]: {e}")
+        return []
+
+
+def get_all_replays():
+    try:
+        supabase = get_supabase_client()
+    except Exception as e:
+        print(f"❌ Aborting replay fetch due to connection failure: {e}")
+        return []
+
     try:
         response = (
             supabase.table(table_name=TABLE_NAME).select("*, iframe_url").execute()
@@ -82,19 +106,21 @@ def get_all_games():
         return response.data
     except Exception as e:
         print(f"[Error]: {e}")
+        return []
 
-
-def get_all_replays():
+# --- Note: get_all_games is used by the Flask index route and should be fixed here too ---
+def get_all_games():
     try:
-        # Fetch all records where iframe_url is NOT NULL, ordered by game_date descending
+        supabase = get_supabase_client()
+    except Exception as e:
+        print(f"❌ Aborting game fetch due to connection failure: {e}")
+        return []
+
+    try:
         response = (
-            supabase.table(TABLE_NAME)
-            .select("*")
-            .not_.is_("iframe_url", None)
-            .order("game_date", desc=True)
-            .execute()
+            supabase.table(table_name=TABLE_NAME).select("*, iframe_url").execute()
         )
         return response.data
     except Exception as e:
-        print(f"[DB Error fetching replays]: {e}")
+        print(f"[Error]: {e}")
         return []

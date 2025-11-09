@@ -95,6 +95,10 @@ def scrape_nba_schedule():
                 away_score = int(away_score_str) if away_score_str.isdigit() else None
 
                 home_team = cols[4].text.strip()
+                if home_team == "Los Angeles Clippers":
+                    home_team = "LA Clippers"
+                elif away_team == "Los Angeles Clippers":
+                    away_team = "LA Clippers"
                 home_score_str = cols[5].text.strip()
                 home_score = int(home_score_str) if home_score_str.isdigit() else None
 
