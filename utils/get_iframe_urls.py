@@ -14,8 +14,8 @@ SEMAPHORE = asyncio.Semaphore(CONCURRENCY_LIMIT)
 async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
 
     # These imports are needed here for the __main__ block to work standalone
-    from db_service import supabase, TABLE_NAME
-
+    # from db_service import get_supabase_client, TABLE_NAME
+    # supabase = get_supabase_client()
     game_id = game_record['id']
     url_to_scrape = REPLAY_BASE_URL + game_record['replay_url']
     game_record['iframe_url'] = "Error: Failed"
@@ -188,9 +188,10 @@ if __name__ == "__main__":
         # Add the parent directory (project root) to the path
         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-        from db_service import supabase, TABLE_NAME
+        from db_service import get_supabase_client, TABLE_NAME
+        supabase = get_supabase_client()
 
-        print("\n--- Running Scraper Test via __main__ ---")
+        print("\n--- Running Scraper Test ---")
         start_replay_scrape(supabase, TABLE_NAME)
 
     except ImportError as e:

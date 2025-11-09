@@ -5,7 +5,7 @@ from datetime import date, datetime
 from api.games_streams import get_basketball_games
 import time
 from utils.get_team_abbreves import team_colors, nba_logo_code, abv
-from db_service import get_all_replays, supabase
+from db_service import get_all_replays, get_supabase_client
 
 current_date = date.today().strftime("%Y-%m-%d")
 
@@ -127,6 +127,7 @@ def replays_index():
 @app.route('/replay/<stream_id>')
 def replay_stream_viewer(stream_id):
     # Fetch the game record from the DB using its ID
+    supabase = get_supabase_client()
     try:
         response = supabase.table("nba_game_data_2025_26").select("iframe_url, away_team, home_team").eq("id", stream_id).limit(1).execute()
         db_game_info = response.data[0] if response.data else None

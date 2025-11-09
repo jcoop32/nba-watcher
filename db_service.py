@@ -40,19 +40,15 @@ def bulk_upsert_game_data():
         return
 
     num_rows = len(data_list)
-    conflict_cols = "game_date,away_team,home_team"
-
-    columns_to_update = "game_date,replay_url,away_team,away_score,home_team,home_score,notes"
+    conflict_cols = "replay_url"
 
     print(f"\n--- Starting SELECTIVE Bulk UPSERT for {num_rows} schedule records ---")
-    print(f"   (Updating ONLY: {columns_to_update})")
 
 
     try:
         response = (
             supabase.table(TABLE_NAME)
-            .select(columns_to_update)
-            .upsert(data_list, on_conflict=conflict_cols)
+            .upsert(data_list, on_conflict=conflict_cols, default_to_null=False)
             .execute()
         )
 
@@ -67,7 +63,7 @@ def bulk_upsert_game_data():
         print(f"❌ Critical Error during initial bulk UPSERT: {e}")
         print("HINT: Ensure the conflict columns form a Unique Constraint on the table.")
 
-bulk_upsert_game_data()
+# bulk_upsert_game_data()
 
 def get_games_to_scrape(limit: int = 1300) -> list:
     try:
