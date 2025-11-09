@@ -160,3 +160,38 @@ h1 {
     align-items: center;
   }
 }
+
+/* Styling for the new header wrapper */
+.page-header-container {
+  display: flex;
+  justify-content: space-between; /* Pushes H1 and button apart */
+  align-items: center; /* Vertically aligns them */
+  margin-bottom: 30px; /* Provides space before the game list */
+  border-bottom: 2px solid #3d3d3d;
+  padding-bottom: 10px;
+}
+
+/* Ensure the H1 doesn't have its own margin-bottom anymore */
+.page-header-container h1 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none; /* Remove the old border from H1 */
+}
+
+/* Style the button link to look similar to the watch links */
+.replays-link-button {
+  background-color: #3182ce; /* A nice blue color */
+  color: white;
+  padding: 8px 15px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.replays-link-button:hover {
+  background-color: #2b6cb0;
+  filter: brightness(1.1);
+}

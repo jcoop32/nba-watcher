@@ -11,7 +11,13 @@
   </head>
   <body>
     <div class="container">
-      <h1>🏀 Basketball Streams</h1>
+      <div class="page-header-container">
+        <h1>🏀 Basketball Streams</h1>
+
+        <a href="{{ url_for('replays_index') }}" class="replays-link-button">
+          Watch Game Replays 📼
+        </a>
+      </div>
       {% if games %}
       <ul class="game-list">
         {% for game in games %}
@@ -61,7 +67,7 @@
             {% endif %}
           </div>
           <a
-            href="{{ url_for('iframe_viewer', stream_id=game.id) }}"
+            href="{{ url_for('stream_viewer', stream_id=game.id) }}"
             class="watch-link"
             target="_blank"
           >

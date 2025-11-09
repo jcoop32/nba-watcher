@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watching Replay: {{ title }}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/stream.css') }}"
+    />
+  </head>
+  <body>
+    <div id="main-container" class="replay-full-screen">
+      <div id="stream-panel">
+        {# Protection Overlay #}
+        <div id="overlay">
+          <div class="overlay-content">
+            <div class="warning-icon">🛡️</div>
+            <h2>Stream Protection</h2>
+            <p>
+              Click the button below to unlock the stream. This helps prevent
+              unwanted ads and popups associated with external players.
+            </p>
+            <button class="unlock-button" onclick="unlockStream()">
+              Unlock Replay
+            </button>
+          </div>
+        </div>
+
+        <div id="click-absorber"></div>
+
+        <iframe
+          id="full-screen-iframe"
+          src="{{ replay_url }}"
+          title="{{ title }} Replay"
+          allow="encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      // --- Copied Unlock/Protection Logic from stream.js (without polling) ---
+      var popupBlocked = false;
+
+      window.open = function () {
+        if (!popupBlocked) {
+          console.log('Popup blocked by protection script');
+          popupBlocked = true;
+        }
+        return null;
+      };
+
+      function unlockStream() {
+        document.getElementById('overlay').classList.add('hidden');
+        document.getElementById('full-screen-iframe').classList.add('unlocked');
+
+        const absorber = document.getElementById('click-absorber');
+        absorber.style.display = 'block';
+
+        setTimeout(() => {
+          absorber.style.display = 'none';
+        }, 1000);
+      }
+
+      document.addEventListener(
+        'click',
+        function (e) {
+          if (e.target.tagName === 'A' && e.target.target === '_blank') {
+            if (!e.target.href.includes('{{ replay_url | safe }}')) {
+              e.preventDefault();
+              console.log('External link blocked:', e.target.href);
+              return false;
+            }
+          }
+        },
+        true,
+      );
+      // -----------------------------------------------------
+    </script>
+  </body>
+</html>

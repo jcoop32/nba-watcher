@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA Replays</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/index.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header-container">
+        <h1>📼 NBA Full Game Replays</h1>
+        <a href="{{ url_for('index') }}" class="replays-link-button">
+          View Live Streams 🏀
+        </a>
+      </div>
+
+      {% if grouped_replays %} {# Loop through the dates in newest-to-oldest
+      order #} {% for date_key in ordered_dates %}
+
+      <h2 class="date-header">{{ date_key }}</h2>
+      <ul class="game-list">
+        {# Loop through the games for that specific date #} {% for game in
+        grouped_replays[date_key] %}
+
+        <li
+          class="game-item"
+          data-teams="{{ game.teams }}"
+          data-color-away="{{ game.away_color }}"
+          data-color-home="{{ game.home_color }}"
+        >
+          <div class="game-content">
+            <div class="game-header">
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.away_logo }}/primary/L/logo.svg"
+                alt="Away Logo"
+                class="team-logo away-team-logo"
+              />
+              <strong class="game-title-text">{{ game.title }}</strong>
+              <img
+                src="https://cdn.nba.com/logos/nba/{{ game.home_logo }}/primary/L/logo.svg"
+                alt="Home Logo"
+                class="team-logo home-team-logo"
+              />
+            </div>
+
+            <strong class="score-status-line">
+              <span class="live-score-status">
+                {# Display Final Score #}
+                <span class="live-score-text">
+                  FINAL: {{ game.away_score }} - {{ game.home_score }}
+                </span>
+              </span>
+            </strong>
+
+            <div class="game-details">
+              {% if game.notes %}
+              <span> | Notes: {{ game.notes }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Link to the dedicated replay player route #}
+          <a
+            href="{{ url_for('replay_stream_viewer', stream_id=game.id) }}"
+            class="watch-link"
+            target="_blank"
+          >
+            Watch Replay
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endfor %} {% else %}
+      <p>No game replays found in the database yet.</p>
+      {% endif %}
+    </div>
+
+    <script>
+      // Function to initialize button gradients (copied from index.js)
+      function initializeButtonGradients() {
+        const LIGHT_COLORS = ['#FFFFFF', '#C4CED4'];
+        document.querySelectorAll('.game-item').forEach(gameItem => {
+          const awayColor = gameItem.dataset.colorAway;
+          const homeColor = gameItem.dataset.colorHome;
+          const button = gameItem.querySelector('.watch-link');
+
+          if (button && awayColor && homeColor) {
+            button.style.background = `linear-gradient(90deg, ${awayColor}, ${homeColor})`;
+            button.style.boxShadow = `0 6px 15px rgba(0, 0, 0, 0.4)`;
+
+            if (
+              LIGHT_COLORS.includes(awayColor) ||
+              LIGHT_COLORS.includes(homeColor)
+            ) {
+              button.style.color = '#1a1a1a';
+            } else {
+              button.style.color = '#FFFFFF';
+            }
+          }
+        });
+      }
+
+      // Run gradients on load
+      window.onload = initializeButtonGradients;
+    </script>
+  </body>
+</html>

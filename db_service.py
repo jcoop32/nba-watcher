@@ -82,3 +82,19 @@ def get_all_games():
         return response.data
     except Exception as e:
         print(f"[Error]: {e}")
+
+
+def get_all_replays():
+    try:
+        # Fetch all records where iframe_url is NOT NULL, ordered by game_date descending
+        response = (
+            supabase.table(TABLE_NAME)
+            .select("*")
+            .not_.is_("iframe_url", None)
+            .order("game_date", desc=True)
+            .execute()
+        )
+        return response.data
+    except Exception as e:
+        print(f"[DB Error fetching replays]: {e}")
+        return []

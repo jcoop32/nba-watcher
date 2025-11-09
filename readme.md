@@ -95,7 +95,7 @@ docker build -t nba-watcher .
 We use port **5001** on the host machine to map to the container's internal port **5000** to avoid common port conflicts:
 
 ```bash
-docker run -d -p 5001:5000 --name nba-watcher-app nba-watcher
+docker run -d -p 5001:5000 --env-file .env --name nba-watcher-app nba-watcher
 ```
 
 ### 3. Access the Application

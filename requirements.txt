@@ -3,6 +3,7 @@ Flask
 nba_api
 pytz
 python-dotenv
-psycopg2
+psycopg2-binary
 supabase
 playwright
+beautifulsoup4

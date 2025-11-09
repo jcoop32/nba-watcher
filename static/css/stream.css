@@ -237,3 +237,13 @@ html {
     width: 100%;
   }
 }
+
+#main-container.replay-full-screen {
+  /* Override the default 70% 30% grid-template-columns */
+  grid-template-columns: 1fr;
+}
+
+/* Ensure the stream panel takes the full width */
+#main-container.replay-full-screen #stream-panel {
+  width: 100%;
+}
