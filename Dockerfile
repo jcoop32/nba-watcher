@@ -9,6 +9,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN playwright install chromium
+
 # Copy the rest of the application source code into the container
 # This includes app.py, the api/, templates/, static/, and utils/ directories.
 COPY . .

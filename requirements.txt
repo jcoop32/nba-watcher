@@ -5,3 +5,4 @@ pytz
 python-dotenv
 psycopg2
 supabase
+playwright

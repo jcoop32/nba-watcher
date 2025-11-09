@@ -1,5 +1,5 @@
 step 1: get list of all past games up to 1 day before current date ✅
-step 2: create a selenium bot to go to site, then go to the actual replay site and then find the. iframe src url
+step 2: create a selenium bot to go to site, then go to the actual replay site and then find the. iframe src url ✅
 step 3: create the frontend for all the past game replays
 step 4: create the stream html for the replay
 step 5: use the src url from selenium bot for the iframe on the stream replay html
