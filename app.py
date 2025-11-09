@@ -5,6 +5,7 @@ from datetime import date
 from api.games_streams import get_basketball_games
 import time
 from utils.get_team_abbreves import team_colors, nba_logo_code
+# from db_service import bulk_upsert_game_data
 
 current_date = date.today().strftime("%Y-%m-%d")
 
@@ -89,4 +90,4 @@ def iframe_viewer(stream_id):
 
 if __name__ == '__main__':
     _GAMES_LIST_CACHE_TIME = time.time()
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)

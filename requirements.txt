@@ -2,3 +2,6 @@ requests
 Flask
 nba_api
 pytz
+python-dotenv
+psycopg2
+supabase

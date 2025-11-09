@@ -1,11 +1,10 @@
-from nba_api.live.nba.endpoints import scoreboard, PlayByPlay
+from nba_api.live.nba.endpoints import scoreboard
 from utils.time_conversions import convert_et_to_cst_conditional, get_game_day_status, has_game_started
 import time
 
 _SCOREBOARD_CACHE = {}
 _LAST_FETCH_TIME = 0
-CACHE_TIMEOUT = 15  # Seconds to wait before hitting the NBA API again (recommended 5-15s)
-
+CACHE_TIMEOUT = 15
 def get_scoreboard_data(upcoming_games: list):
     global _SCOREBOARD_CACHE, _LAST_FETCH_TIME
 
