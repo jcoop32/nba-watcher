@@ -102,7 +102,7 @@ def get_all_replays():
 
     try:
         response = (
-            supabase.table(table_name=TABLE_NAME).select("*, iframe_url").execute()
+            supabase.table(table_name=TABLE_NAME).select("*, iframe_url").not_.is_("iframe_url", None).execute()
         )
         return response.data
     except Exception as e:
