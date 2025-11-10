@@ -22,7 +22,7 @@ def scrape_nba_schedule():
     BASE_URL = "https://www.basketball-reference.com/leagues/NBA_2026_games-"
 
     # Calculate the dynamic end date (day before today)
-    end_date_limit = date.today() - timedelta(days=1)
+    end_date_limit = date.today() - timedelta(hours=6)
     END_DATE_STRING = end_date_limit.strftime("%Y-%m-%d")
 
     games_list = []
@@ -142,3 +142,7 @@ def scrape_nba_schedule():
 
     return games_list
 
+
+# data = scrape_nba_schedule()
+# print(data)
+# print(len(data))

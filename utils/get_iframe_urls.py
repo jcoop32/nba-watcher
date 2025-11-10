@@ -2,8 +2,7 @@ import asyncio
 from playwright.async_api import async_playwright, Playwright
 from supabase import Client
 import time
-import os
-import sys
+
 
 REPLAY_BASE_URL = "https://basketball-video.com/"
 CONCURRENCY_LIMIT = 5
@@ -13,9 +12,6 @@ SEMAPHORE = asyncio.Semaphore(CONCURRENCY_LIMIT)
 
 async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
 
-    # These imports are needed here for the __main__ block to work standalone
-    # from db_service import get_supabase_client, TABLE_NAME
-    # supabase = get_supabase_client()
     game_id = game_record['id']
     url_to_scrape = REPLAY_BASE_URL + game_record['replay_url']
     game_record['iframe_url'] = "Error: Failed"
@@ -45,9 +41,7 @@ async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
                 # Wait for the new page to load its content
                 await new_page.wait_for_load_state('domcontentloaded')
 
-                # --- CRITICAL: Reassign the 'page' variable to the new page ---
                 page = new_page
-                # --------------------------------------------------------------------
 
                 print(f"[{game_id}] Step 2/3: Click successful and switched focus.")
                 print(f"[{game_id}] DEBUG: Current URL after navigation: {page.url}")
@@ -174,27 +168,8 @@ async def run_replay_scraper(supabase_client: Client, table_name: str):
     print(f"Rows failed/skipped: {failed_count + (len(games_to_scrape) - successful_updates) - failed_count}") # Simplified counting
 
 
-# --- C. SYNCHRONOUS WRAPPER AND TEST EXECUTION BLOCK ---
 
 def start_replay_scrape(supabase_client: Client, table_name: str):
     """Synchronous wrapper to run the asynchronous scraper from a sync context."""
     return asyncio.run(run_replay_scraper(supabase_client, table_name))
 
-
-if __name__ == "__main__":
-    try:
-        import sys
-
-        # Add the parent directory (project root) to the path
-        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-        from db_service import get_supabase_client, TABLE_NAME
-        supabase = get_supabase_client()
-
-        print("\n--- Running Scraper Test ---")
-        start_replay_scrape(supabase, TABLE_NAME)
-
-    except ImportError as e:
-        print(f"\n❌ Execution Error: Could not import db_service. Check project structure. ({e})")
-    except Exception as e:
-        print(f"\n❌ An unexpected error occurred during test execution: {e}")

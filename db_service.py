@@ -24,7 +24,6 @@ def get_supabase_client() -> Client:
         # Re-raise the error so the calling function (bulk_upsert) can handle the connection failure
         raise Exception(f"Failed to initialize Supabase client: {e}")
 
-# --- UPDATED: Functions now use the client getter and selective UPSERT ---
 
 def bulk_upsert_game_data():
     try:
@@ -43,12 +42,18 @@ def bulk_upsert_game_data():
     conflict_cols = "replay_url"
 
     print(f"\n--- Starting SELECTIVE Bulk UPSERT for {num_rows} schedule records ---")
+    column_to_preserve = "iframe_url"
 
-
+    data_list_for_upsert = []
+    for record in data_list:
+        record_copy = record.copy()
+        if column_to_preserve in record_copy:
+            del record_copy[column_to_preserve]
+        data_list_for_upsert.append(record_copy)
     try:
         response = (
             supabase.table(TABLE_NAME)
-            .upsert(data_list, on_conflict=conflict_cols, default_to_null=False)
+            .upsert(data_list_for_upsert, on_conflict=conflict_cols)
             .execute()
         )
 
