@@ -88,7 +88,7 @@ async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
 
 # --- B. Orchestration and Database Update ---
 
-async def run_replay_scraper(supabase_client: Client, table_name: str):
+async def run_replay_scraper(supabase_client: Client, table_name: str) -> int:
 
     # Import the fetching function from db_service locally
     from db_service import get_games_to_scrape
@@ -98,21 +98,18 @@ async def run_replay_scraper(supabase_client: Client, table_name: str):
     print("--- STARTING ASYNCHRONOUS REPLAY SCRAPER PIPELINE ---")
     print("-----------------------------------------------------")
 
-    # 1. Fetch only the records where iframe_url is NULL
     games_to_scrape = get_games_to_scrape(limit=1300)
 
     if not games_to_scrape:
         print("✅ Filter complete: No new games found to scrape. Exiting scraper.")
-        return
+        return 0
 
     print(f"Found {len(games_to_scrape)} games requiring scraping.")
 
-    # 2. Run all scraping tasks concurrently
     async with async_playwright() as p:
         tasks = [scrape_iframe_url(p, game) for game in games_to_scrape]
         updated_records = await asyncio.gather(*tasks)
 
-    # 3. Prepare the payload for bulk update
     update_payload = []
     failed_count = 0
     for record in updated_records:
@@ -126,20 +123,16 @@ async def run_replay_scraper(supabase_client: Client, table_name: str):
 
     print(f"\nScraping phase finished. Successful records found: {len(update_payload)}")
 
-    # --- 4. Database Update using concurrent individual UPDATEs ---
     async def concurrent_db_update(payload_item: dict):
-        """Runs a single, atomic update operation for one row using asyncio.to_thread."""
         try:
             update_data = {'iframe_url': payload_item['iframe_url']}
 
-            # --- THE FIX: Use asyncio.to_thread to run the synchronous execute() call ---
             await asyncio.to_thread(
                 supabase_client.table(table_name)
                 .update(update_data)
                 .eq('id', payload_item['id'])
                 .execute
             )
-            # --------------------------------------------------------------------------
             return True
         except Exception as e:
             # Log failure but do not crash the concurrent process
@@ -158,7 +151,6 @@ async def run_replay_scraper(supabase_client: Client, table_name: str):
 
         print(f"✅ Bulk update complete. {successful_updates} rows updated successfully.")
 
-    # -------------------------------------------------------------------------------------
 
     end_time = time.time()
     print(f"\n--- Scraper Summary ---")
@@ -167,9 +159,10 @@ async def run_replay_scraper(supabase_client: Client, table_name: str):
     print(f"Rows updated successfully: {successful_updates}")
     print(f"Rows failed/skipped: {failed_count + (len(games_to_scrape) - successful_updates) - failed_count}") # Simplified counting
 
+    # --- ADDED RETURN VALUE ---
+    return successful_updates
 
 
 def start_replay_scrape(supabase_client: Client, table_name: str):
     """Synchronous wrapper to run the asynchronous scraper from a sync context."""
     return asyncio.run(run_replay_scraper(supabase_client, table_name))
-

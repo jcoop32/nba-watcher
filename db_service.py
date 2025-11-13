@@ -1,5 +1,3 @@
-# jcoop32/nba-watcher/nba-watcher-a4c77f1f60af3f329fe1623e00dceda3da0d2c7f/db_service.py
-
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -9,11 +7,9 @@ load_dotenv()
 
 SUPABASE_URL: str = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY")
-TABLE_NAME = "nba_game_data_2025_26" # Ensure this matches your table name
+TABLE_NAME = "nba_game_data_2025_26"
 
-# --- NEW FUNCTION: Lazy Client Getter ---
 def get_supabase_client() -> Client:
-    """Initializes and returns the Supabase client when called."""
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:
              raise ValueError("Supabase URL or Key is missing from environment.")
@@ -21,7 +17,6 @@ def get_supabase_client() -> Client:
         client = create_client(SUPABASE_URL, SUPABASE_KEY)
         return client
     except Exception as e:
-        # Re-raise the error so the calling function (bulk_upsert) can handle the connection failure
         raise Exception(f"Failed to initialize Supabase client: {e}")
 
 
@@ -109,7 +104,6 @@ def get_all_replays():
         print(f"[Error]: {e}")
         return []
 
-# --- Note: get_all_games is used by the Flask index route and should be fixed here too ---
 def get_all_games():
     try:
         supabase = get_supabase_client()

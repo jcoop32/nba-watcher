@@ -20,20 +20,16 @@ def send_email_notification(message: str):
             print("❌ EMAIL FAILED: SMTP/Recipient credentials missing.")
             return
 
-        # Create the email content
         msg = MIMEText(message)
         msg['Subject'] = "NBA Replay Games Updated"
         msg['From'] = smtp_user
         msg['To'] = recipient_email
 
-        # Connect to the SMTP server and send
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
 
-            # This is the crucial authentication step
             server.login(smtp_user, smtp_password)
 
-            # Send the mail
             server.sendmail(smtp_user, recipient_email, msg.as_string())
 
         print(f"✅ Email notification sent successfully to {recipient_email}.")
@@ -47,13 +43,18 @@ def send_email_notification(message: str):
 def update_and_fetch_new_replay_games():
     supabase = get_supabase_client()
     print("Updating db with new games played...")
-    bulk_upsert_game_data()
-    print("\n--- Running Scraper ---")
-    start_replay_scrape(supabase, TABLE_NAME)
 
-    send_email_notification(
-        "NBA Watcher cron job complete! Game replays are now updated and live."
+    bulk_upsert_game_data()
+
+    print("\n--- Running Scraper ---")
+    new_iframes_added = start_replay_scrape(supabase, TABLE_NAME)
+
+    email_message = (
+        f"NBA Watcher cron job complete!\n\n"
+        f"New iframe_urls scraped and added: {new_iframes_added}\n\n"
+        f"Game replays are now updated and live."
     )
 
-update_and_fetch_new_replay_games()
+    send_email_notification(email_message)
 
+update_and_fetch_new_replay_games()
