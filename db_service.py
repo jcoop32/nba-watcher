@@ -119,3 +119,20 @@ def get_all_games():
     except Exception as e:
         print(f"[Error]: {e}")
         return []
+
+
+def count_games_without_iframe() -> int:
+    try:
+        supabase = get_supabase_client()
+        response = (
+            supabase.table(TABLE_NAME)
+            .select("id", count='exact', head=True)
+            .is_("iframe_url", None)
+            .execute()
+        )
+        return response.count
+    except Exception as e:
+        print(f"[DB Error counting null iframes]: {e}")
+        return -1 # Return -1 to signal an error
+
+

@@ -1,5 +1,5 @@
 from utils.get_iframe_urls import start_replay_scrape
-from db_service import get_supabase_client, TABLE_NAME, bulk_upsert_game_data
+from db_service import get_supabase_client, TABLE_NAME, bulk_upsert_game_data, count_games_without_iframe
 import smtplib
 import os
 from email.mime.text import MIMEText
@@ -45,12 +45,14 @@ def update_and_fetch_new_replay_games():
     print("Updating db with new games played...")
 
     bulk_upsert_game_data()
+    games_without_iframes = count_games_without_iframe()
 
     print("\n--- Running Scraper ---")
     new_iframes_added = start_replay_scrape(supabase, TABLE_NAME)
 
     email_message = (
         f"NBA Watcher cron job complete!\n\n"
+        f"New games added: {games_without_iframes}\n\n"
         f"New iframe_urls scraped and added: {new_iframes_added}\n\n"
         f"Game replays are now updated and live."
     )
