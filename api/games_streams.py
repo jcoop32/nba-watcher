@@ -1,8 +1,8 @@
 import requests
 import json
 from datetime import datetime
-from utils.get_team_abbreves import get_normalized_team_key
-from utils.time_conversions import format_et_to_cst_status, convert_ms_to_yyyymmdd, convert_ms_timestamp_to_12hr
+from utils.get_team_abbreves import get_normalized_team_key, abv
+from utils.time_conversions import format_et_to_cst_status, convert_ms_to_yyyymmdd
 
 def get_basketball_games_source_1():
     """Fetches from Lotus.xyz and returns a dict keyed by 'YYYY-MM-DD_TEAMKEY'"""
@@ -29,19 +29,23 @@ def get_basketball_games_source_1():
                     continue
 
                 game_key = f"{date_str}_{team_key}"
-                # print(game_key)
 
                 game_id = int(game["hds"][0])
                 stream_url = f"https://lotusgamehd.xyz/lotushd.php?hd={game_id}"
 
+                teams = game["title"].split(" - ")
+                away_team = teams[1]
+                home_team = teams[0]
+                new_title = f'{away_team} vs. {home_team}'
+
                 game_data = {
                     "id": game_key,
-                    "title": title,
+                    "title": new_title,
                     "game_start": format_et_to_cst_status(game["when_et"]),
                     "status": f"🔴 {game['status']}" if game["status"] == "LIVE" else game["status"],
-                    "teams": team_key,
-                    "away_tricode": away,
-                    "home_tricode": home,
+                    "teams": away + home,
+                    "away_tricode": abv[away_team],
+                    "home_tricode": abv[home_team],
                     "streams": [stream_url]
                 }
                 games_dict[game_key] = game_data
@@ -70,10 +74,9 @@ def get_basketball_games_source_2():
             if not date_str:
                 continue
 
+            # Use the SORTED key for merging
             game_key = f"{date_str}_{team_key}"
-            # print(game_key)
 
-            # 3. Create stream objects
             streams_list = []
             for source in game.get("sources", []):
                 if source.get("id"):
@@ -88,7 +91,7 @@ def get_basketball_games_source_2():
                 "title": title,
                 "game_start": convert_ms_to_yyyymmdd(game["date"]) if "date" in game else "TBD", # S2 API doesn't have this, use S1's if merged
                 "status": game.get("status", "Scheduled"),
-                "teams": team_key,
+                "teams": away + home,
                 "away_tricode": away,
                 "home_tricode": home,
                 "streams": streams_list
@@ -114,9 +117,9 @@ def get_basketball_games():
         if game_key in merged_games:
             # GAME ALREADY EXISTS! Append streams.
             merged_games[game_key]["streams"].extend(game_s2["streams"])
-        else:
-            # This is a new game, just add it
-            merged_games[game_key] = game_s2
+        # else:
+        #     # This is a new game, just add it
+        #     merged_games[game_key] = game_s2
 
     # Return the merged games as a list
     return list(merged_games.values())
