@@ -30,9 +30,9 @@
 
         <iframe
           id="full-screen-iframe"
-          src="temp"
+          src="about:blank"
           title="{{ title }}"
-          allow="encrypted-media; picture-in-picture; fullscreen; autoplay"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowfullscreen
         ></iframe>
       </div>
@@ -50,17 +50,14 @@
             </button>
             {% endfor %}
           </div>
-
           <div id="game-info">
             <h2>{{ title }}</h2>
             <p id="live-status">Loading Live Data...</p>
           </div>
-
           <div id="boxscore-tabs">
             <div class="tab-nav"></div>
           </div>
         </div>
-
         <div id="tab-content-container"></div>
       </div>
     </div>
@@ -69,7 +66,6 @@
       const GAME_ID = '{{ game_id_nba | safe }}';
       const TEAMS = '{{ teams | safe }}';
     </script>
-
     <script src="{{ url_for('static', filename='js/stream.js') }}"></script>
   </body>
 </html>

@@ -26,11 +26,9 @@ def get_game_list_from_cache_or_api():
 def index():
     games_list = get_game_list_from_cache_or_api()
 
-    # --- MODIFIED ---
-    # The new API functions already give us away/home tricode
     for game in games_list:
-        away_tricode = game.get("away_tricode", "ATL") # Use defaults
-        home_tricode = game.get("home_tricode", "ATL") # Use defaults
+        away_tricode = game.get("away_tricode", "ATL")
+        home_tricode = game.get("home_tricode", "ATL")
         default_color = "#333333"
 
         game["away_color"] = team_colors.get(away_tricode, default_color)

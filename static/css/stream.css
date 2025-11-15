@@ -18,12 +18,12 @@ html {
   height: 100vh;
   width: 100vw;
 }
-
+/*
 #stream-panel {
   position: relative; /* CRITICAL: Anchor for absolute children (overlay, absorber) */
-  background-color: #000;
-  height: 100%;
-}
+/* background-color: #000; */
+/* height: 100%; */
+/* } */
 
 /* SCOREBOARD PANEL - DARKER BACKGROUND AS REQUESTED */
 #score-panel {
@@ -53,12 +53,12 @@ html {
 }
 
 /* --- Iframe & Overlay Styles (Protection remains functional) --- */
-#full-screen-iframe {
+/* #full-screen-iframe {
   border: none;
   width: 100%;
   height: 100%;
   pointer-events: none;
-}
+} */
 
 #full-screen-iframe.unlocked {
   pointer-events: auto;
@@ -83,7 +83,7 @@ html {
   display: none;
 }
 
-#click-absorber {
+/* #click-absorber {
   position: absolute;
   top: 0;
   left: 0;
@@ -91,7 +91,7 @@ html {
   height: 100%;
   z-index: 9998;
   display: none;
-}
+} */
 
 /* --- Overlay Content Styles --- */
 .overlay-content {
@@ -312,4 +312,39 @@ html {
 /* Hide iframe if no source is set */
 #full-screen-iframe {
   background: #000; /* Show black bg */
+}
+
+#click-absorber {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 10;
+  cursor: pointer;
+  display: none;
+}
+#click-absorber::before {
+  content: 'Click to Play';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 12px 24px;
+  border-radius: 8px;
+}
+#stream-panel {
+  position: relative;
+}
+#full-screen-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.hidden {
+  display: none;
 }
