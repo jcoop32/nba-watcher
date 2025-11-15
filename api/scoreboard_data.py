@@ -17,11 +17,33 @@ def get_scoreboard_data(upcoming_games: list):
     all_game_scoreboard = games["scoreboard"]["games"]
     game_scoreboards = {}
 
+    # This is the list of "correct" AWAYHOME tricodes from the NBA API
     today_game_codes = [g["gameCode"].split('/')[1] for g in all_game_scoreboard]
 
     for teams in upcoming_games:
+        # --- START: New Logic ---
+
+        game = None
+        found_key = None
+
         if teams in today_game_codes:
-            game = next(g for g in all_game_scoreboard if teams in g["gameCode"])
+            # The tricode (e.g., 'CHIDEN') was correct as-is
+            found_key = teams
+        else:
+            # The tricode was not found. Let's try reversing it.
+            if len(teams) == 6: # Safety check
+                # e.g., 'DENCHI' -> 'CHI' + 'DEN' = 'CHIDEN'
+                reversed_teams = teams[3:] + teams[:3]
+
+                if reversed_teams in today_game_codes:
+                    # The reversed key was correct!
+                    found_key = reversed_teams
+
+        if found_key:
+            # We found the game, using either the original or reversed key
+            game = next(g for g in all_game_scoreboard if found_key in g["gameCode"])
+
+            # --- END: New Logic ---
 
             try:
                 home_leader = game["gameLeaders"]["homeLeaders"]
@@ -54,7 +76,7 @@ def get_scoreboard_data(upcoming_games: list):
                     "game_id": game["gameId"]
                 }
         else:
-            # Not found → game is likely tomorrow or later
+            # Not found (even after reversing) → game is likely tomorrow or later
             data = {
                 "game_status": "Tommorrow",
                 "game_started_yet": False,
@@ -65,6 +87,8 @@ def get_scoreboard_data(upcoming_games: list):
                 "game_id": None
             }
 
+        # We use the *original* `teams` key here so the frontend gets
+        # the data it asked for, regardless of which key we used to find it.
         game_scoreboards[teams] = data
 
     # 3. UPDATE CACHE: Store new data and timestamp
