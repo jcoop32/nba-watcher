@@ -229,3 +229,59 @@ def format_et_to_cst_status(et_datetime_str: str) -> str:
     except pytz.exceptions.UnknownTimeZoneError:
         return "Error: Time zone configuration issue."
 
+
+def convert_ms_to_yyyymmdd(ms_timestamp, timezone_str='US/Central'):
+    """
+    Converts a 13-digit millisecond Unix timestamp to a YYYY-MM-DD string
+    in the specified timezone.
+    """
+    try:
+        ms_timestamp = float(ms_timestamp)
+        s_timestamp = ms_timestamp / 1000
+
+        dt_naive_utc = datetime.utcfromtimestamp(s_timestamp)
+        dt_aware_utc = pytz.utc.localize(dt_naive_utc)
+
+        target_timezone = pytz.timezone(timezone_str)
+        dt_target = dt_aware_utc.astimezone(target_timezone)
+
+        # Return in YYYY-MM-DD format
+        return dt_target.strftime('%Y-%m-%d')
+
+    except (ValueError, TypeError, OSError):
+        return None
+
+def convert_ms_timestamp_to_12hr(ms_timestamp):
+    """
+    Converts a 13-digit millisecond Unix timestamp to a formatted 12-hour
+    string (YYYY MM DD HH:MM AM/PM) in the US/Central timezone (CST/CDT).
+
+    :param ms_timestamp: The 13-digit timestamp (e.g., 1763155800000).
+    :return: A formatted time string in US/Central time.
+    """
+    try:
+        # Convert timestamp from string or int to a number
+        ms_timestamp = float(ms_timestamp)
+
+        # Convert from milliseconds to seconds
+        s_timestamp = ms_timestamp / 1000
+
+        # 1. Create a naive datetime object from the timestamp in UTC
+        dt_naive_utc = datetime.datetime.utcfromtimestamp(s_timestamp)
+
+        # 2. Localize the naive object to make it timezone-aware (aware of itself as UTC)
+        dt_aware_utc = pytz.utc.localize(dt_naive_utc)
+
+        # 3. Convert to the target timezone
+        try:
+            target_timezone = pytz.timezone('US/Central')
+            dt_target_original = dt_aware_utc.astimezone(target_timezone)
+
+            dt_target = dt_target_original + datetime.timedelta(hours=1)
+            return dt_target.strftime('%Y %m %d %I:%M %p')
+
+        except pytz.exceptions.UnknownTimeZoneError:
+            return "Error: Could not load US/Central timezone"
+
+    except (ValueError, TypeError, OSError):
+        return "Error: Invalid timestamp provided"

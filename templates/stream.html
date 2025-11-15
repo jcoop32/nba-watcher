@@ -17,9 +17,8 @@
             <div class="warning-icon">🛡️</div>
             <h2>Ad & Popup Protection</h2>
             <p>
-              Click the button below to unlock the stream. This helps prevent
-              unwanted ads and popups. Avoid clicking on the video player itself
-              until the stream loads.
+              Click "Unlock Stream", then choose a stream source. This helps
+              prevent unwanted ads.
             </p>
             <button class="unlock-button" onclick="unlockStream()">
               Unlock Stream
@@ -31,24 +30,38 @@
 
         <iframe
           id="full-screen-iframe"
-          src="https://lotusgamehd.xyz/lotushd.php?hd={{ id }}"
+          src="temp"
           title="{{ title }}"
-          allow="encrypted-media; picture-in-picture; fullscreen"
+          allow="encrypted-media; picture-in-picture; fullscreen; autoplay"
           allowfullscreen
         ></iframe>
       </div>
 
       <div id="score-panel">
-        <div id="game-info">
-          <h2>{{ title }}</h2>
-          <p id="live-status">Loading Live Data...</p>
+        <div id="score-panel-header">
+          <div id="stream-options">
+            {% for stream_url in stream_info.streams %}
+            <button
+              class="stream-button"
+              data-url="{{ stream_url }}"
+              onclick="setStream('{{ stream_url }}', this)"
+            >
+              Stream {{ loop.index }}
+            </button>
+            {% endfor %}
+          </div>
+
+          <div id="game-info">
+            <h2>{{ title }}</h2>
+            <p id="live-status">Loading Live Data...</p>
+          </div>
+
+          <div id="boxscore-tabs">
+            <div class="tab-nav"></div>
+          </div>
         </div>
 
-        <div id="boxscore-tabs">
-          <div class="tab-nav"></div>
-
-          <div id="tab-content-container"></div>
-        </div>
+        <div id="tab-content-container"></div>
       </div>
     </div>
 

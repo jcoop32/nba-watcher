@@ -139,3 +139,54 @@ def extract_teams_from_game_title(game_title):
     title = f"{away_team} vs. {home_team}"
 
     return title, teams
+
+
+
+def get_normalized_team_key(title_str: str):
+    """
+    Finds the two competing teams from a title string, regardless of format.
+
+    Returns a tuple containing:
+    1. The normalized key (e.g., "BOSLAL")
+    2. The "standard" title (e.g., "Boston Celtics vs. LA Lakers")
+    3. The first team tricode found (e.g., "BOS"), used as "away"
+    4. The second team tricode found (e.g., "LAL"), used as "home"
+    """
+
+    # Sort team names by length (longest first) to correctly match
+    # "LA Clippers" before "LA Lakers" or "LA"
+    sorted_team_names = sorted(abv.keys(), key=len, reverse=True)
+
+    found_teams = [] # Will store ('BOS', 'Boston Celtics')
+
+    for team_name in sorted_team_names:
+        if team_name in title_str:
+            tricode = abv[team_name]
+            # Add the tricode and full name if not already found
+            if not any(t[0] == tricode for t in found_teams):
+                found_teams.append((tricode, team_name))
+
+            # Stop once we have two teams
+            if len(found_teams) == 2:
+                break
+
+    if len(found_teams) == 2:
+        # We have a match
+        team_1_tricode, team_1_name = found_teams[0]
+        team_2_tricode, team_2_name = found_teams[1]
+
+        # Create a stable, sorted key
+        sorted_key = "".join(sorted([team_1_tricode, team_2_tricode]))
+
+        # Create a standard title
+        # We guess away/home based on which appeared first in the title
+        if title_str.find(team_1_name) < title_str.find(team_2_name):
+            away_tricode, home_tricode = team_1_tricode, team_2_tricode
+            standard_title = f"{team_1_name} vs. {team_2_name}"
+        else:
+            away_tricode, home_tricode = team_2_tricode, team_1_tricode
+            standard_title = f"{team_2_name} vs. {team_1_name}"
+
+        return sorted_key, standard_title, away_tricode, home_tricode
+
+    return None, None, None, None

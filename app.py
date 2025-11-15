@@ -26,43 +26,41 @@ def get_game_list_from_cache_or_api():
 def index():
     games_list = get_game_list_from_cache_or_api()
 
+    # --- MODIFIED ---
+    # The new API functions already give us away/home tricode
     for game in games_list:
-        teams_tricode = game["teams"]
-        away_tricode = teams_tricode[:3]
-        home_tricode = teams_tricode[3:]
+        away_tricode = game.get("away_tricode", "ATL") # Use defaults
+        home_tricode = game.get("home_tricode", "ATL") # Use defaults
         default_color = "#333333"
-        away_color = team_colors.get(away_tricode, default_color)
-        home_color = team_colors.get(home_tricode, default_color)
 
-        game["away_color"] = away_color
-        game["home_color"] = home_color
-        game["away_logo"] = nba_logo_code[away_tricode]
-        game["home_logo"] = nba_logo_code[home_tricode]
+        game["away_color"] = team_colors.get(away_tricode, default_color)
+        game["home_color"] = team_colors.get(home_tricode, default_color)
+        game["away_logo"] = nba_logo_code.get(away_tricode, "1610612737")
+        game["home_logo"] = nba_logo_code.get(home_tricode, "1610612737")
+    # ----------------
 
     scoreboard_data_teams = [game["teams"] for game in games_list]
-
     scoreboard_data = get_scoreboard_data(scoreboard_data_teams)
-    return render_template('index.html', games=games_list, sb_data=scoreboard_data)
 
+    return render_template('index.html', games=games_list, sb_data=scoreboard_data)
 
 @app.route('/stream/<stream_id>')
 def stream_viewer(stream_id):
     games_list = get_game_list_from_cache_or_api()
 
     BASKETBALL_STREAMS = {stream['id']: stream for stream in games_list}
-    stream_info = BASKETBALL_STREAMS.get(int(stream_id))
+
+    stream_info = BASKETBALL_STREAMS.get(stream_id)
 
     if stream_info:
-        # Fetch NBA game ID for boxscore polling
         scoreboard_data_raw = get_scoreboard_data([stream_info['teams']])
         game_id_nba = scoreboard_data_raw.get(stream_info.get("teams")).get("game_id")
 
-        if not stream_info.get('id'):
-            abort(404, description="Stream found, but embed URL is missing.")
+        if not stream_info.get('streams'):
+            abort(404, description="Stream found, but embed URL list is missing.")
 
-        # RENDER ORIGINAL STREAM TEMPLATE
         return render_template('stream.html',
-                               id=stream_info['id'],
+                               stream_info=stream_info,
                                title=stream_info['title'],
                                game_id_nba=game_id_nba,
                                teams=stream_info['teams'])
@@ -82,12 +80,10 @@ def replays_index():
         home_team_name = game["home_team"]
 
         try:
-            # Process team data
             away_tricode = abv[away_team_name]
             home_tricode = abv[home_team_name]
             teams_tricode = away_tricode + home_tricode
 
-            # Attach color, logo, and teams tricode
             default_color = "#333333"
             game["away_color"] = team_colors.get(away_tricode, default_color)
             game["home_color"] = team_colors.get(home_tricode, default_color)
@@ -99,7 +95,6 @@ def replays_index():
         except KeyError:
             continue
 
-        # Grouping Logic
         game_date_str = game["game_date"]
         try:
             dt_object = datetime.strptime(game_date_str, "%Y-%m-%d")
@@ -112,7 +107,6 @@ def replays_index():
 
         grouped_replays[display_date].append(game)
 
-    # Generate ordered list of dates (DESC)
     unique_raw_dates = sorted(list(set(g['game_date'] for g in raw_replays)), reverse=True)
     for raw_date in unique_raw_dates:
         try:
@@ -126,7 +120,6 @@ def replays_index():
 
 @app.route('/replay/<stream_id>')
 def replay_stream_viewer(stream_id):
-    # Fetch the game record from the DB using its ID
     supabase = get_supabase_client()
     try:
         response = supabase.table("nba_game_data_2025_26").select("iframe_url, away_team, home_team").eq("id", stream_id).limit(1).execute()
@@ -136,12 +129,10 @@ def replay_stream_viewer(stream_id):
         abort(500, description="Database error fetching replay data.")
 
     if db_game_info and db_game_info.get('iframe_url'):
-        # Pass the scraped URL and game title to the replay template
         return render_template('replay_stream.html',
                                title=f"{db_game_info['away_team']} vs. {db_game_info['home_team']}",
                                replay_url=db_game_info['iframe_url'])
     else:
-        # If the ID is found but iframe_url is NULL, or ID is not found
         abort(404, description=f"Replay ID {stream_id} not found or iframe link is still pending scrape.")
 
 @app.route('/api/scoreboard')
@@ -167,3 +158,4 @@ def api_boxscore(game_id):
 if __name__ == '__main__':
     _GAMES_LIST_CACHE_TIME = time.time()
     app.run(host="0.0.0.0", debug=True)
+    # app.run(debug=True)

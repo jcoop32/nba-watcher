@@ -1,4 +1,21 @@
-// --- Existing Overlay/Protection Logic ---
+// --- NEW: Global reference to the iframe ---
+const streamIframe = document.getElementById('full-screen-iframe');
+
+// --- NEW: Function to set the stream source ---
+function setStream(url, buttonElement) {
+  // Set the iframe source
+  streamIframe.src = url;
+
+  // Optional: Highlight the active button
+  document
+    .querySelectorAll('.stream-button')
+    .forEach(btn => btn.classList.remove('active'));
+  if (buttonElement) {
+    buttonElement.classList.add('active');
+  }
+}
+
+// --- Overlay/Protection Logic ---
 var popupBlocked = false;
 
 window.open = function () {
@@ -9,9 +26,13 @@ window.open = function () {
   return null;
 };
 
+// --- MODIFIED: Replaced old unlockStream with this new one ---
 function unlockStream() {
   document.getElementById('overlay').classList.add('hidden');
-  document.getElementById('full-screen-iframe').classList.add('unlocked');
+
+  if (streamIframe) {
+    streamIframe.classList.add('unlocked');
+  }
 
   // Temporarily engage a click absorber to catch the first popup-triggering click
   const absorber = document.getElementById('click-absorber');
@@ -21,13 +42,26 @@ function unlockStream() {
   setTimeout(() => {
     absorber.style.display = 'none';
   }, 1000);
+
+  // --- NEW ---
+  // Load the first stream automatically and highlight the first button
+  const firstButton = document.querySelector('.stream-button');
+  if (firstButton) {
+    const firstUrl = firstButton.dataset.url;
+    setStream(firstUrl, firstButton);
+  }
 }
 
 document.addEventListener(
   'click',
   function (e) {
     if (e.target.tagName === 'A' && e.target.target === '_blank') {
-      if (!e.target.href.includes('lotusgamehd.xyz')) {
+      // --- MODIFICATION: Made check more generic ---
+      // This will block popups from *both* stream sources
+      if (
+        !e.target.href.includes('lotusgamehd.xyz') &&
+        !e.target.href.includes('embedsports.top')
+      ) {
         e.preventDefault();
         console.log('External link blocked:', e.target.href);
         return false;
@@ -37,7 +71,7 @@ document.addEventListener(
   true,
 );
 
-// --- Box Score & Polling Logic ---
+// --- Box Score & Polling Logic (UNMODIFIED) ---
 
 // Global variable to hold the polling interval ID
 let boxScoreIntervalId = null;
