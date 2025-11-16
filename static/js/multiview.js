@@ -1,8 +1,8 @@
 let activeGameId = null;
-let selectedGames = [];
+let selectedGames = []; // Array of game objects with {game_id, stream_url, streams, game_data}
 let allGames = [];
 
-// Set active game (for audio focus)
+// Set active game (for visual focus only)
 function setActiveGame(gameId) {
   activeGameId = gameId;
 
@@ -42,14 +42,39 @@ function renderGames() {
                 </button>
             </div>
         `;
+    updateGridLayout();
     return;
   }
 
-  grid.innerHTML = '';
+  // Remove empty state if it exists
+  const emptyState = grid.querySelector('.empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
 
+  // Check which games are already rendered
+  const existingContainers = Array.from(
+    grid.querySelectorAll('.game-container'),
+  );
+  const existingGameIds = existingContainers.map(c => c.dataset.gameId);
+  const newGameIds = selectedGames.map(g => g.game_id);
+
+  // Remove games that are no longer selected
+  existingContainers.forEach(container => {
+    if (!newGameIds.includes(container.dataset.gameId)) {
+      container.remove();
+    }
+  });
+
+  // Add new games only
   selectedGames.forEach((game, index) => {
-    const container = createGameContainer(game, index);
-    grid.appendChild(container);
+    if (!existingGameIds.includes(game.game_id)) {
+      const container = createGameContainer(game, index);
+      grid.appendChild(container);
+    } else {
+      // Update stream sources for existing game if needed
+      updateStreamSourceButtons(game);
+    }
   });
 
   updateGridLayout();
@@ -68,12 +93,39 @@ function renderGames() {
   }
 }
 
+// Update stream source buttons for an existing game
+function updateStreamSourceButtons(game) {
+  const container = document.querySelector(`[data-game-id="${game.game_id}"]`);
+  if (!container) return;
+
+  const selector = container.querySelector('.stream-source-selector');
+  if (!selector || !game.streams || game.streams.length === 0) return;
+
+  // Rebuild stream source buttons
+  selector.innerHTML = game.streams
+    .map(
+      (stream, idx) => `
+        <button class="stream-source-btn ${
+          idx === game.currentStreamIndex ? 'active' : ''
+        }"
+                onclick="event.stopPropagation(); changeStreamSource('${
+                  game.game_id
+                }', ${idx})">
+            ${stream.name || `Source ${idx + 1}`}
+        </button>
+    `,
+    )
+    .join('');
+}
+
 // Create a game container element
 function createGameContainer(game, index) {
   const container = document.createElement('div');
   container.className = 'game-container';
   container.dataset.gameId = game.game_id;
-  container.onclick = () => setActiveGame(game.game_id);
+
+  // Show add game button only if less than 4 games
+  const showAddButton = selectedGames.length < 4;
 
   // Create stream source selector buttons
   let streamSourcesHTML = '';
@@ -99,14 +151,25 @@ function createGameContainer(game, index) {
   }
 
   container.innerHTML = `
+        ${
+          showAddButton
+            ? '<button class="add-game-overlay-btn" onclick="event.stopPropagation(); showGameSelector()" title="Add Game">➕ Add Game</button>'
+            : ''
+        }
+
         <div class="game-controls">
-            <button class="game-control-btn" onclick="event.stopPropagation(); removeGame('${game.game_id}')" title="Remove">✕</button>
+            <button class="game-control-btn replace-btn" onclick="event.stopPropagation(); replaceGame('${
+              game.game_id
+            }')" title="Replace Game">⇄</button>
+            <button class="game-control-btn" onclick="event.stopPropagation(); removeGame('${
+              game.game_id
+            }')" title="Remove">✕</button>
         </div>
 
-        <div class="audio-indicator">🔊 Audio</div>
-
         <div class="stream-container">
-            <iframe src="${game.stream_url}" allowfullscreen></iframe>
+            <iframe src="${game.stream_url}"
+                    allowfullscreen
+                    allow="autoplay; fullscreen"></iframe>
         </div>
 
         ${streamSourcesHTML}
@@ -123,8 +186,24 @@ function changeStreamSource(gameId, streamIndex) {
   game.currentStreamIndex = streamIndex;
   game.stream_url = game.streams[streamIndex].url;
 
-  // Re-render games
-  renderGames();
+  // Update only the iframe for this game
+  const container = document.querySelector(`[data-game-id="${gameId}"]`);
+  if (container) {
+    const iframe = container.querySelector('iframe');
+    if (iframe) {
+      iframe.src = game.stream_url;
+    }
+
+    // Update button states
+    const buttons = container.querySelectorAll('.stream-source-btn');
+    buttons.forEach((btn, idx) => {
+      if (idx === streamIndex) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
 
   // Save to localStorage
   saveSelectedGames();
@@ -170,13 +249,59 @@ function removeGameFromModal(gameId) {
   }
 }
 
+// Replace a game with another
+function replaceGame(gameId) {
+  showGameSelector(gameId);
+}
+
+// Replace game with selected game
+function replaceWithGame(oldGameId, newGameId) {
+  // Find the game data for the new game
+  const newGameData = allGames.find(g => g.id === newGameId);
+  if (!newGameData) return;
+
+  // Find index of old game
+  const oldGameIndex = selectedGames.findIndex(g => g.game_id === oldGameId);
+  if (oldGameIndex === -1) return;
+
+  // Create new game object
+  const streamUrls = newGameData.streams || [];
+  const streams = streamUrls.map((url, index) => ({
+    name: `Stream ${index + 1}`,
+    url: url,
+  }));
+
+  const newGame = {
+    game_id: newGameId,
+    stream_url: streams.length > 0 ? streams[0].url : '',
+    streams: streams,
+    currentStreamIndex: 0,
+    game_data: newGameData,
+  };
+
+  // Replace the old game
+  selectedGames[oldGameIndex] = newGame;
+
+  // If the replaced game was active, make the new game active
+  if (activeGameId === oldGameId) {
+    activeGameId = newGameId;
+  }
+
+  // Update UI
+  renderGames();
+  saveSelectedGames();
+
+  // Close modal
+  closeGameSelector();
+}
+
 // Show game selection modal
-function showGameSelector() {
+function showGameSelector(replacingGameId = null) {
   fetch('/api/games-today')
     .then(res => res.json())
     .then(games => {
       allGames = games;
-      createGameSelectorModal(games);
+      createGameSelectorModal(games, replacingGameId);
     })
     .catch(err => {
       console.error('Error fetching games:', err);
@@ -185,7 +310,7 @@ function showGameSelector() {
 }
 
 // Create game selector modal
-function createGameSelectorModal(games) {
+function createGameSelectorModal(games, replacingGameId = null) {
   // Remove existing modal if any
   const existingModal = document.getElementById('gameSelectionModal');
   if (existingModal) {
@@ -197,11 +322,13 @@ function createGameSelectorModal(games) {
   modal.className = 'modal-overlay';
 
   const selectedGameIds = selectedGames.map(g => g.game_id);
+  const isReplaceMode = replacingGameId !== null;
 
   let gamesHTML = '';
   games.forEach(game => {
     const gameId = game.id;
     const isAdded = selectedGameIds.includes(gameId);
+    const isBeingReplaced = gameId === replacingGameId;
 
     // Display game title or format from tricodes
     const displayTitle =
@@ -213,9 +340,14 @@ function createGameSelectorModal(games) {
       statusDisplay = '🔴 LIVE';
     }
 
+    // In replace mode, show all games except the one being replaced
+    if (isReplaceMode && isBeingReplaced) {
+      return; // Skip the game being replaced
+    }
+
     gamesHTML += `
             <div class="game-selection-item ${
-              isAdded ? 'selected' : ''
+              isAdded && !isReplaceMode ? 'selected' : ''
             }" data-game-id="${gameId}">
                 <div class="game-info">
                     <div class="game-teams">
@@ -225,21 +357,33 @@ function createGameSelectorModal(games) {
                       game.game_start || ''
                     } • ${statusDisplay}</div>
                 </div>
-                <button class="add-game-btn ${isAdded ? 'added' : ''}"
+                <button class="add-game-btn ${
+                  isAdded && !isReplaceMode ? 'added' : ''
+                }"
                         onclick="${
-                          isAdded
+                          isReplaceMode
+                            ? `replaceWithGame('${replacingGameId}', '${gameId}')`
+                            : isAdded
                             ? `removeGameFromModal('${gameId}')`
                             : `addGame('${gameId}')`
                         }">
-                    ${isAdded ? '✓ Added' : '+ Add'}
+                    ${
+                      isReplaceMode
+                        ? '↔ Replace'
+                        : isAdded
+                        ? '✓ Added'
+                        : '+ Add'
+                    }
                 </button>
             </div>
         `;
   });
 
+  const modalTitle = isReplaceMode ? 'Replace Game' : 'Add Games to Watch';
+
   modal.innerHTML = `
         <div class="modal-content">
-            <h2>Add Games to Watch</h2>
+            <h2>${modalTitle}</h2>
             <div class="game-selection-list">
                 ${gamesHTML || '<p style="color: #666;">No games available</p>'}
             </div>
@@ -311,70 +455,16 @@ function closeGameSelector() {
   }
 }
 
-// Save selected games to localStorage
+// Save selected games to localStorage (removed - no longer saving)
 function saveSelectedGames() {
-  const dataToSave = selectedGames.map(g => ({
-    game_id: g.game_id,
-    currentStreamIndex: g.currentStreamIndex,
-  }));
-  localStorage.setItem(
-    'nba_watcher_selected_games',
-    JSON.stringify(dataToSave),
-  );
+  // No longer saving to localStorage - fresh start each time
+  return;
 }
 
-// Load selected games from localStorage
+// Load selected games from localStorage (removed - always start fresh)
 function loadSelectedGames() {
-  const saved = localStorage.getItem('nba_watcher_selected_games');
-  if (!saved) return;
-
-  try {
-    const savedGames = JSON.parse(saved);
-
-    // Fetch current games and restore selection
-    fetch('/api/games-today')
-      .then(res => res.json())
-      .then(games => {
-        allGames = games;
-
-        savedGames.forEach(savedGame => {
-          const gameData = games.find(g => g.id === savedGame.game_id);
-          if (gameData) {
-            const streamUrls = gameData.streams || [];
-            const streams = streamUrls.map((url, index) => ({
-              name: `Stream ${index + 1}`,
-              url: url,
-            }));
-
-            const streamIndex = savedGame.currentStreamIndex || 0;
-            const streamUrl =
-              streams.length > streamIndex ? streams[streamIndex].url : '';
-
-            selectedGames.push({
-              game_id: savedGame.game_id,
-              stream_url: streamUrl,
-              streams: streams,
-              currentStreamIndex: streamIndex,
-              game_data: gameData,
-            });
-          }
-        });
-
-        renderGames();
-
-        // Restore active game
-        const savedActiveGame = localStorage.getItem('nba_watcher_active_game');
-        if (
-          savedActiveGame &&
-          selectedGames.some(g => g.game_id === savedActiveGame)
-        ) {
-          setActiveGame(savedActiveGame);
-        }
-      })
-      .catch(err => console.error('Error loading games:', err));
-  } catch (e) {
-    console.error('Error parsing saved games:', e);
-  }
+  // No longer loading from localStorage - always start with empty state
+  return;
 }
 
 // Keyboard shortcuts

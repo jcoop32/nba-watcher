@@ -186,12 +186,36 @@ body {
   background: #444;
 }
 
+.control-btn {
+  padding: 0.6rem 1.2rem;
+  background: #e31837;
+  border: 1px solid #e31837;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.control-btn:hover {
+  background: #c41530;
+}
+
+.control-btn-primary {
+  background: #e31837;
+  border-color: #e31837;
+}
+
+.control-btn-primary:hover {
+  background: #c41530;
+}
+
 /* Dynamic Grid Layouts */
 .multi-game-grid {
   display: grid;
   gap: 2px;
   padding: 0;
-  height: calc(100vh - 42px);
+  height: 100vh;
   background: #111;
   transition: all 0.3s ease;
 }
@@ -226,13 +250,13 @@ body {
 
 /* Empty state */
 .empty-state {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 4rem;
   text-align: center;
+  height: 100%;
 }
 
 .empty-state h2 {
@@ -245,6 +269,71 @@ body {
   font-size: 1rem;
   color: #888;
   margin-bottom: 2rem;
+}
+
+.game-controls {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 0.25rem;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.game-container:hover .game-controls {
+  opacity: 1;
+}
+
+/* Add game button in top left when there are games */
+.add-game-overlay-btn {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: rgba(227, 24, 55, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.game-container:hover .add-game-overlay-btn {
+  opacity: 1;
+}
+
+.add-game-overlay-btn:hover {
+  background: rgba(195, 20, 47, 1);
+}
+
+.game-control-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.game-control-btn:hover {
+  background: rgba(227, 24, 55, 0.9);
+  border-color: #e31837;
+}
+
+.game-control-btn.replace-btn {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.game-control-btn.replace-btn:hover {
+  background: rgba(30, 144, 255, 0.9);
+  border-color: #1e90ff;
 }
 
 .game-container {
@@ -273,54 +362,6 @@ body {
   width: 100%;
   height: 100%;
   border: none;
-  display: block;
-}
-
-.game-controls {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  display: flex;
-  gap: 0.25rem;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.game-container:hover .game-controls {
-  opacity: 1;
-}
-
-.game-control-btn {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 0.35rem 0.5rem;
-  cursor: pointer;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  transition: all 0.2s;
-}
-
-.game-control-btn:hover {
-  background: rgba(227, 24, 55, 0.9);
-  border-color: #e31837;
-}
-
-.audio-indicator {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: rgba(227, 24, 55, 0.9);
-  padding: 0.35rem 0.6rem;
-  border-radius: 3px;
-  font-size: 0.75rem;
-  z-index: 10;
-  display: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.game-container.active .audio-indicator {
   display: block;
 }
 
@@ -382,7 +423,7 @@ body {
 
   .multi-game-grid {
     height: auto;
-    min-height: calc(100vh - 42px);
+    min-height: 100vh;
   }
 
   .game-container {
@@ -395,26 +436,19 @@ body {
 }
 
 @media (max-width: 640px) {
-  .header h1 {
-    font-size: 0.8rem;
-  }
-
-  .control-btn {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.65rem;
-  }
-
-  .shortcuts-hint {
-    display: none;
-  }
-
   .game-controls,
-  .stream-source-selector {
+  .stream-source-selector,
+  .add-game-overlay-btn {
     opacity: 1;
   }
 
   .game-control-btn {
-    padding: 0.25rem 0.35rem;
+    padding: 0.2rem 0.3rem;
+    font-size: 0.65rem;
+  }
+
+  .add-game-overlay-btn {
+    padding: 0.3rem 0.5rem;
     font-size: 0.7rem;
   }
 
