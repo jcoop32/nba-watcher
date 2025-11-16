@@ -1,0 +1,51 @@
+name: Update NBA Replays
+
+on:
+  # Allows you to run this workflow manually from the Actions tab in GitHub
+  workflow_dispatch:
+
+  # Runs the workflow on a schedule
+  schedule:
+    # This example runs at 8:00 AM UTC every day.
+    # You can change this using cron syntax.
+    - cron: '0 13 * * *'
+
+jobs:
+  scrape:
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out your repository's code
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the correct Python version
+      # We use 3.10 to match your Dockerfile
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # Step 3: Install all required Python packages
+      # This reads your requirements.txt file
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Step 4: Install the Playwright browser
+      # This is critical for the scraper
+      # We install only chromium, just like in your Dockerfile
+      - name: Install Playwright browser
+        run: |
+          playwright install chromium
+
+      # Step 5: Run the update script
+      # This is the main command
+      - name: Run replay scraper script
+        env:
+          # Pass in your secrets
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
+        run: python update_replayed_games.py
