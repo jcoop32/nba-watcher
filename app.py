@@ -25,7 +25,6 @@ def get_game_list_from_cache_or_api():
 @app.route('/')
 def index():
     games_list = get_game_list_from_cache_or_api()
-
     for game in games_list:
         away_tricode = game.get("away_tricode", "ATL")
         home_tricode = game.get("home_tricode", "ATL")
@@ -35,7 +34,6 @@ def index():
         game["home_color"] = team_colors.get(home_tricode, default_color)
         game["away_logo"] = nba_logo_code.get(away_tricode, "1610612737")
         game["home_logo"] = nba_logo_code.get(home_tricode, "1610612737")
-    # ----------------
 
     scoreboard_data_teams = [game["teams"] for game in games_list]
     scoreboard_data = get_scoreboard_data(scoreboard_data_teams)
@@ -152,6 +150,14 @@ def api_boxscore(game_id):
     boxscore_data = get_single_game_boxscore(game_id)
     return jsonify(boxscore_data)
 
+@app.route('/multi-view')
+def multi_view():
+    return render_template('multiview.html')
+
+@app.route('/api/games-today')
+def games_today():
+    games = get_game_list_from_cache_or_api()
+    return jsonify(games)
 
 if __name__ == '__main__':
     _GAMES_LIST_CACHE_TIME = time.time()

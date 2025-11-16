@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA Multi-Game View</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/multiview.css') }}"
+    />
+  </head>
+  <body>
+    <div class="header">
+      <div class="controls-row">
+        <button
+          class="control-btn control-btn-primary"
+          onclick="showGameSelector()"
+        >
+          ➕ Add Game
+        </button>
+        <button class="control-btn" onclick="window.location.href='/'">
+          ← Back to Games
+        </button>
+      </div>
+      <div class="shortcuts-hint">
+        Keyboard: 1-4 to focus game | A to add game | Click stream to set audio
+        focus | Hover for stream sources
+      </div>
+    </div>
+
+    <div class="multi-game-grid grid-0" id="gameGrid">
+      <div class="empty-state">
+        <h2>No Games Selected</h2>
+        <p>Add games to start watching</p>
+        <button
+          class="control-btn control-btn-primary"
+          onclick="showGameSelector()"
+        >
+          ➕ Add Game
+        </button>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/multiview.js') }}"></script>
+  </body>
+</html>

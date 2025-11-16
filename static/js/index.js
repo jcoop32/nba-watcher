@@ -1,3 +1,64 @@
+let multiviewSelections = [];
+const maxSelections = 4;
+let launchButton = null;
+
+function initializeMultiview() {
+  launchButton = document.getElementById('launch-multiview-btn');
+  if (!launchButton) return;
+
+  document.querySelectorAll('.multiview-link').forEach(button => {
+    button.addEventListener('click', () => toggleMultiviewSelection(button));
+  });
+
+  launchButton.addEventListener('click', e => {
+    e.preventDefault();
+    launchMultiview();
+  });
+}
+
+function toggleMultiviewSelection(button) {
+  const gameId = button.dataset.gameId;
+  const index = multiviewSelections.indexOf(gameId);
+
+  if (index > -1) {
+    // Already selected, so remove it
+    multiviewSelections.splice(index, 1);
+    button.classList.remove('selected');
+    button.textContent = '+ Multiview';
+  } else {
+    // Not selected, so add it (if not full)
+    if (multiviewSelections.length >= maxSelections) {
+      alert(`You can only select up to ${maxSelections} games for multiview.`);
+      return;
+    }
+    multiviewSelections.push(gameId);
+    button.classList.add('selected');
+    button.textContent = '✓ Added';
+  }
+
+  updateLaunchButton();
+}
+
+function updateLaunchButton() {
+  const count = multiviewSelections.length;
+  if (count > 0) {
+    launchButton.classList.remove('hidden');
+    launchButton.textContent = `Launch Multiview (${count})`;
+  } else {
+    launchButton.classList.add('hidden');
+  }
+}
+
+function launchMultiview() {
+  if (multiviewSelections.length === 0) return;
+
+  const gameIds = multiviewSelections.join(',');
+  const url = `/multiview?games=${gameIds}`;
+
+  // Open in a new tab
+  window.open(url, '_blank');
+}
+
 function updateScoreboard() {
   // Fetch data from the new Flask API endpoint
   fetch('/api/scoreboard')
@@ -81,11 +142,16 @@ function initializeButtonGradients() {
   });
 }
 
+// --- Run everything on load ---
+
 // Run the update function immediately on load
 updateScoreboard();
 
 // Initialize gradients immediately after scores/status update
 initializeButtonGradients();
+
+// Initialize the multiview buttons
+initializeMultiview();
 
 // Set an interval to poll the server every 20 seconds (20000 milliseconds)
 setInterval(updateScoreboard, 20000);
