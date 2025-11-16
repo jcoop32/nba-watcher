@@ -7,4 +7,4 @@ psycopg2-binary
 supabase
 playwright
 beautifulsoup4
-flake8
+# flake8
