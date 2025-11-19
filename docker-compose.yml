@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: nba-watcher-app
+    ports:
+      - '5001:5000'
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=${REDIS_URL}
+    restart: always
