@@ -82,7 +82,7 @@ sudo usermod -aG docker $USER
 
 These instructions will get a copy of the project running in a container on your local machine.
 
-### 1. Build and run Docker Image
+### 1. Build and run Docker Image and Container
 
 ```bash
 docker-compose down
