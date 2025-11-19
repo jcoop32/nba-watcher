@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EuroLeague & Other Games</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/index.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header-container">
+        <h1><span>🌍</span> EuroLeague / Other</h1>
+
+        <a href="{{ url_for('index') }}" class="replays-link-button">
+          Back to NBA 🏀
+        </a>
+      </div>
+
+      {% if games %}
+      <ul class="game-list">
+        {% for game in games %}
+        <li
+          class="game-item {% if 'LIVE' in game.status %}live{% endif %}"
+          style="border-color: #27272a; min-height: 240px"
+        >
+          <div class="game-content" style="justify-content: space-between">
+            <div
+              class="game-header"
+              style="
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                width: 100%;
+                margin-bottom: 15px;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  width: 45%;
+                  gap: 10px;
+                "
+              >
+                {% if game.away_logo %}
+                <img
+                  src="{{ game.away_logo }}"
+                  alt="{{ game.away_team_full }}"
+                  class="team-logo"
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    object-fit: contain;
+                    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+                  "
+                  loading="lazy"
+                />
+                {% else %}
+                <div
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    background: #27272a;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                  "
+                >
+                  {{ game.away_tricode }}
+                </div>
+                {% endif %}
+                <span
+                  style="
+                    text-align: center;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    line-height: 1.2;
+                    color: #f4f4f5;
+                  "
+                >
+                  {{ game.away_team_full }}
+                </span>
+              </div>
+
+              <div
+                style="
+                  font-size: 0.8rem;
+                  font-weight: 800;
+                  color: #52525b;
+                  margin-top: 20px;
+                "
+              >
+                VS
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  width: 45%;
+                  gap: 10px;
+                "
+              >
+                {% if game.home_logo %}
+                <img
+                  src="{{ game.home_logo }}"
+                  alt="{{ game.home_team_full }}"
+                  class="team-logo"
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    object-fit: contain;
+                    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+                  "
+                  loading="lazy"
+                />
+                {% else %}
+                <div
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    background: #27272a;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                  "
+                >
+                  {{ game.home_tricode }}
+                </div>
+                {% endif %}
+                <span
+                  style="
+                    text-align: center;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    line-height: 1.2;
+                    color: #f4f4f5;
+                  "
+                >
+                  {{ game.home_team_full }}
+                </span>
+              </div>
+            </div>
+
+            <strong class="score-status-line">
+              <span class="live-score-status">
+                <span class="game-details" style="color: #a1a1aa">
+                  {{ game.status }} <br />
+                  <span style="font-size: 0.8rem; color: #71717a"
+                    >{{ game.game_start }}</span
+                  >
+                </span>
+              </span>
+            </strong>
+          </div>
+
+          <a
+            href="{{ url_for('stream_viewer', stream_id=game.id) }}"
+            class="watch-link"
+            style="background: #27272a"
+            target="_blank"
+          >
+            Watch Stream
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div style="text-align: center; padding: 60px; color: #71717a">
+        <h2>No international games found.</h2>
+        <p>Check back later for EuroLeague and other matchups.</p>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>

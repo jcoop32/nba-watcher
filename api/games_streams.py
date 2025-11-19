@@ -3,7 +3,7 @@ import concurrent.futures
 from datetime import datetime
 import pytz
 from utils.get_team_abbreves import get_normalized_team_key, abv
-from utils.time_conversions import format_et_to_cst_status, convert_ms_to_yyyymmdd
+from utils.time_conversions import format_et_to_cst_status, convert_ms_to_yyyymmdd, has_date_passed
 
 session = requests.Session()
 
@@ -154,3 +154,85 @@ def get_basketball_games():
         #     merged_games[game_key] = game_s2
 
     return list(merged_games.values())
+
+
+def get_euro_basketball_games():
+    """
+    Fetches NON-NBA, POPULAR games from Streamed.pk.
+    """
+    API_URL = "https://streamed.pk/api/matches/basketball"
+    IMG_BASE_URL = "https://streamed.pk/api/images/proxy/"
+    games_dict = {}
+
+    try:
+        response = session.get(API_URL, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        for game in data:
+            if game.get("date") == 0:
+                continue
+
+            if not game.get("popular", False):
+                continue
+
+            nba_key, _, _, _ = get_normalized_team_key(game["title"])
+            if nba_key:
+                continue
+
+            clean_title = game["title"].strip()
+            date_ms = game.get("date", 0)
+            slug_title = clean_title.lower().replace(' ', '-').replace(':', '').replace('.', '')
+            game_key = f"other_{date_ms}_{slug_title}"
+
+            try:
+                dt_obj = datetime.fromtimestamp(date_ms / 1000, pytz.timezone('US/Central'))
+                game_start_str = dt_obj.strftime('%Y-%m-%d %I:%M %p')
+            except Exception:
+                game_start_str = "TBD"
+
+            streams_list = []
+            for source in game.get("sources", []):
+                if source.get("id"):
+                    stream_url = f"https://embedsports.top/embed/{source['source']}/{source['id']}/1"
+                    streams_list.append(stream_url)
+
+            if not streams_list:
+                continue
+
+            home_team = "Home"
+            away_team = "Away"
+            home_logo_url = None
+            away_logo_url = None
+            game_started_yet = has_date_passed(game.get("date"))
+            if "teams" in game:
+                home_data = game.get("teams", {}).get("home", {})
+                away_data = game.get("teams", {}).get("away", {})
+
+                home_team = home_data.get("name", "Home")
+                away_team = away_data.get("name", "Away")
+
+                if home_data.get("badge"):
+                    home_logo_url = f"{IMG_BASE_URL}{home_data['badge']}.webp"
+                if away_data.get("badge"):
+                    away_logo_url = f"{IMG_BASE_URL}{away_data['badge']}.webp"
+
+            game_data = {
+                "id": game_key,
+                "title": clean_title,
+                "start_timestamp": date_ms / 1000,
+                "game_start": game_start_str,
+                "status": "🔴 LIVE" if game_started_yet else "Scheduled",
+                "teams": "OTHER",
+                "away_team_full": away_team,
+                "home_team_full": home_team,
+                "away_logo": away_logo_url,
+                "home_logo": home_logo_url,
+                "streams": streams_list
+            }
+            games_dict[game_key] = game_data
+
+    except Exception as e:
+        print(f"Error fetching other games: {e}")
+
+    return sorted(games_dict.values(), key=lambda x: x['start_timestamp'])
