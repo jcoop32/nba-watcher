@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize connection
-# Defaults to localhost if no env variable is set (useful for local dev without Docker)
 redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 try:

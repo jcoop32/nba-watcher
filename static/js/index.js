@@ -1,6 +1,7 @@
 let multiviewSelections = [];
 const maxSelections = 4;
 let launchButton = null;
+let pollingIntervalId = null;
 
 function initializeMultiview() {
   launchButton = document.getElementById('launch-multiview-btn');
@@ -83,8 +84,6 @@ function updateScoreboard() {
             const statusElement = gameItem.querySelector(
               '.game-details[data-status]',
             );
-            // Target the last event element
-            // const lastEventElement = gameItem.querySelector('.last-event-text');
 
             if (gameData.game_started_yet) {
               // Update the score if the game is live or finished
@@ -92,18 +91,9 @@ function updateScoreboard() {
                 scoreText.textContent = `${gameData.away_score} - ${gameData.home_score}`;
               }
 
-              // Update the game status/clock
+              // Update the game status/quarter
               statusElement.textContent = `| ${gameData.game_status}`;
-
-              // Update the last game event text
-              // if (lastEventElement) {
-              //   lastEventElement.textContent = `Last Event: ${gameData.last_game_event}`;
-              // }
             }
-            // else {
-            //   // Update the status for scheduled games (in case time changes)
-            //   statusElement.textContent = `| ${gameData.today_or_tomorrow} ${gameData.game_status}`;
-            // }
           }
         }
       }
@@ -115,7 +105,6 @@ function updateScoreboard() {
 
 // Function to initialize button gradients
 function initializeButtonGradients() {
-  // List of light hex colors that need black text for contrast
   const LIGHT_COLORS = ['#FFFFFF', '#C4CED4'];
 
   document.querySelectorAll('.game-item').forEach(gameItem => {
@@ -124,9 +113,7 @@ function initializeButtonGradients() {
     const button = gameItem.querySelector('.watch-link');
 
     if (button && awayColor && homeColor) {
-      // Apply linear gradient from away color to home color
       button.style.background = `linear-gradient(90deg, ${awayColor}, ${homeColor})`;
-      // Apply a consistent box shadow for visual depth
       button.style.boxShadow = `0 6px 15px rgba(0, 0, 0, 0.4)`;
 
       if (
@@ -137,21 +124,54 @@ function initializeButtonGradients() {
       } else {
         button.style.color = '#FFFFFF';
       }
-    } else {
     }
   });
 }
 
-// --- Run everything on load ---
+// --- NEW: Polling Gatekeeper Logic ---
 
-// Run the update function immediately on load
-updateScoreboard();
+function runUpdateCycle() {
+  updateScoreboard();
+}
 
-// Initialize gradients immediately after scores/status update
-initializeButtonGradients();
+function startPollingManager() {
+  const MINUTES_BEFORE = 10;
+  const now = Math.floor(Date.now() / 1000);
+  const targetTime = EARLIEST_GAME_TS - MINUTES_BEFORE * 60;
 
-// Initialize the multiview buttons
-initializeMultiview();
+  console.log(`[Polling Manager] Earliest Game TS: ${EARLIEST_GAME_TS}`);
+  console.log(`[Polling Manager] Current TS: ${now}`);
+  console.log(`[Polling Manager] Target Start TS: ${targetTime}`);
 
-// Set an interval to poll the server every 20 seconds (20000 milliseconds)
-setInterval(updateScoreboard, 20000);
+  if (EARLIEST_GAME_TS === 0 || now >= targetTime) {
+    // Start immediately if game is close, active, or timestamp missing
+    console.log(
+      '✅ Game time imminent or active. Starting polling immediately.',
+    );
+    runUpdateCycle();
+    pollingIntervalId = setInterval(runUpdateCycle, 20000);
+  } else {
+    // Wait until target time
+    const secondsToWait = targetTime - now;
+    console.log(
+      `⏳ Too early. Waiting ${secondsToWait} seconds to start polling.`,
+    );
+
+    setTimeout(() => {
+      console.log('⏰ Waking up! Starting polling now.');
+      runUpdateCycle();
+      pollingIntervalId = setInterval(runUpdateCycle, 20000);
+    }, secondsToWait * 1000);
+  }
+}
+
+// --- Initialization ---
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Visual setups
+  initializeButtonGradients();
+  initializeMultiview();
+
+  // Start the logic to decide when to pull data
+  startPollingManager();
+});

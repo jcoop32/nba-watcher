@@ -95,7 +95,7 @@ async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
 
 async def run_replay_scraper(supabase_client: Client, table_name: str) -> int:
 
-    from db_service import get_games_to_scrape
+    from services.db_service import get_games_to_scrape
 
     start_time = time.time()
     print("\n-----------------------------------------------------")

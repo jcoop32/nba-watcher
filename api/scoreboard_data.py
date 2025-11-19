@@ -1,34 +1,42 @@
-from nba_api.live.nba.endpoints import scoreboard
+import requests
 from utils.time_conversions import convert_et_to_cst_conditional, get_game_day_status, has_game_started
-from utils.redis_service import get_cache, set_cache
+from services.redis_service import get_cache, set_cache
 
 CACHE_TIMEOUT = 15
+SCOREBOARD_URL = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
+
+session = requests.Session()
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Referer': 'https://www.nba.com/',
+    'Origin': 'https://www.nba.com'
+}
+session.headers.update(HEADERS)
 
 def get_scoreboard_data(upcoming_games: list):
     """
-    Fetches scoreboard data for the requested list of teams (tricodes).
-    Uses Redis to cache the full NBA scoreboard to minimize API calls.
+    Fetches scoreboard data using a persistent HTTP session for speed.
     """
 
-    # 1. Try to get the full scoreboard from Redis
     full_scoreboard_data = get_cache("nba_scoreboard_live")
 
     if not full_scoreboard_data:
-        # 2. If cache miss, fetch fresh data from NBA API
         try:
-            games = scoreboard.ScoreBoard().get_dict()
+            response = session.get(SCOREBOARD_URL, timeout=5)
+            response.raise_for_status()
+            games = response.json()
+
             all_game_scoreboard = games["scoreboard"]["games"]
             full_scoreboard_data = {}
 
-            # Process ALL games currently on the board
             for game in all_game_scoreboard:
-                # Extract keys cleanly
-                game_code = game["gameCode"].split('/')[1] # e.g., 'BOSLAL'
+                game_code = game["gameCode"].split('/')[1]
 
                 home_leader = game["gameLeaders"].get("homeLeaders", {})
                 away_leader = game["gameLeaders"].get("awayLeaders", {})
 
-                # Build the game data object
                 data = {
                     "game_status": f"{convert_et_to_cst_conditional(game['gameStatusText'])}",
                     "quarter": game['gameStatusText'],
@@ -41,31 +49,26 @@ def get_scoreboard_data(upcoming_games: list):
                     "game_id": game["gameId"]
                 }
 
-                # Store using the standard tricode (e.g. BOSLAL)
                 full_scoreboard_data[game_code] = data
 
-                # Also store reversed key just in case (LALBOS) to handle different source formats
                 if len(game_code) == 6:
                     reversed_key = game_code[3:] + game_code[:3]
                     full_scoreboard_data[reversed_key] = data
 
-            # 3. Save the COMPLETE processed data to Redis
             set_cache("nba_scoreboard_live", full_scoreboard_data, CACHE_TIMEOUT)
 
         except Exception as e:
-            print(f"Scoreboard API Error: {e}")
+            print(f"Scoreboard Fetch Error: {e}")
             full_scoreboard_data = {}
 
-    # 4. Filter the full data for the specific games requested by the frontend
     result_scoreboards = {}
 
     for teams in upcoming_games:
         if teams in full_scoreboard_data:
             result_scoreboards[teams] = full_scoreboard_data[teams]
         else:
-            # Fallback for games not found (e.g. games tomorrow that aren't on today's scoreboard yet)
             result_scoreboards[teams] = {
-                "game_status": "Tomorrow", # Or "Scheduled"
+                "game_status": "Scheduled",
                 "game_started_yet": False,
                 "best_stats_home": "N/A",
                 "best_stats_away": "N/A",

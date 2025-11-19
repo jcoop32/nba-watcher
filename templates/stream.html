@@ -70,6 +70,7 @@
     <script>
       const GAME_ID = '{{ game_id_nba | safe }}';
       const TEAMS = '{{ teams | safe }}';
+      const GAME_STARTED = '{{ game_started | tojson }}';
     </script>
     <script src="{{ url_for('static', filename='js/stream.js') }}"></script>
   </body>

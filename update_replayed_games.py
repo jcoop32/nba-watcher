@@ -1,5 +1,5 @@
 from utils.get_iframe_urls import start_replay_scrape
-from db_service import get_supabase_client, TABLE_NAME, bulk_upsert_game_data, count_games_without_iframe
+from services.db_service import get_supabase_client, TABLE_NAME, bulk_upsert_game_data, count_games_without_iframe
 import smtplib
 import os
 from email.mime.text import MIMEText

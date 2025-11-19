@@ -8,3 +8,5 @@ supabase
 playwright
 beautifulsoup4
 redis
+flask-compress
+orjson

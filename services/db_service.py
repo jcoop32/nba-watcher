@@ -9,13 +9,19 @@ SUPABASE_URL: str = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY")
 TABLE_NAME = "nba_game_data_2025_26"
 
+_supabase_client = None
 def get_supabase_client() -> Client:
+    global _supabase_client
+
+    if _supabase_client is not None:
+        return _supabase_client
+
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:
-             raise ValueError("Supabase URL or Key is missing from environment.")
+             raise ValueError("Supabase URL or Key is missing.")
 
-        client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        return client
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        return _supabase_client
     except Exception as e:
         raise Exception(f"Failed to initialize Supabase client: {e}")
 
@@ -97,7 +103,7 @@ def get_all_replays():
 
     try:
         response = (
-            supabase.table(table_name=TABLE_NAME).select("*, iframe_url").not_.is_("iframe_url", None).execute()
+            supabase.table(table_name=TABLE_NAME).select("id, game_date, away_team, home_team, iframe_url, notes,  away_score, home_score").not_.is_("iframe_url", None).execute()
         )
         return response.data
     except Exception as e:

@@ -198,8 +198,15 @@ function fetchAndUpdateBoxScore() {
 
 // Start polling
 if (typeof GAME_ID !== 'undefined') {
-  fetchAndUpdateBoxScore();
-  boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
+  // Only start polling if the game has actually started
+  if (GAME_STARTED) {
+    fetchAndUpdateBoxScore();
+    boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
+  } else {
+    // Optional: Update text to let user know why there are no stats
+    document.getElementById('live-status').textContent =
+      'Game has not started.';
+  }
 } else {
   document.getElementById('live-status').textContent = 'Initialization Error.';
 }
