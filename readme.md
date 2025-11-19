@@ -82,7 +82,14 @@ sudo usermod -aG docker $USER
 
 These instructions will get a copy of the project running in a container on your local machine.
 
-### 1. Build the Docker Image
+### 1. Build and run Docker Image
+
+```bash
+docker-compose down
+docker-compose up --build -d
+```
+
+### 2a. Build the Docker Image
 
 Navigate to the project's root directory (where the `Dockerfile` and `app.py` are located) and run the build command:
 
@@ -90,7 +97,7 @@ Navigate to the project's root directory (where the `Dockerfile` and `app.py` ar
 docker build -t nba-watcher .
 ```
 
-### 2. Run the Container
+### 2b. Run the Container
 
 We use port **5001** on the host machine to map to the container's internal port **5000** to avoid common port conflicts:
 
