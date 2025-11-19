@@ -1,84 +1,71 @@
 from nba_api.live.nba.endpoints import scoreboard
 from utils.time_conversions import convert_et_to_cst_conditional, get_game_day_status, has_game_started
-import time
+from utils.redis_service import get_cache, set_cache
 
-_SCOREBOARD_CACHE = {}
-_LAST_FETCH_TIME = 0
 CACHE_TIMEOUT = 15
+
 def get_scoreboard_data(upcoming_games: list):
-    global _SCOREBOARD_CACHE, _LAST_FETCH_TIME
+    """
+    Fetches scoreboard data for the requested list of teams (tricodes).
+    Uses Redis to cache the full NBA scoreboard to minimize API calls.
+    """
 
-    #CHECK CACHE: If data is fresh, return it immediately.
-    if time.time() - _LAST_FETCH_TIME < CACHE_TIMEOUT:
-        return {teams: _SCOREBOARD_CACHE.get(teams) for teams in upcoming_games if teams in _SCOREBOARD_CACHE}
+    # 1. Try to get the full scoreboard from Redis
+    full_scoreboard_data = get_cache("nba_scoreboard_live")
 
+    if not full_scoreboard_data:
+        # 2. If cache miss, fetch fresh data from NBA API
+        try:
+            games = scoreboard.ScoreBoard().get_dict()
+            all_game_scoreboard = games["scoreboard"]["games"]
+            full_scoreboard_data = {}
 
-    games = scoreboard.ScoreBoard().get_dict()
-    all_game_scoreboard = games["scoreboard"]["games"]
-    game_scoreboards = {}
+            # Process ALL games currently on the board
+            for game in all_game_scoreboard:
+                # Extract keys cleanly
+                game_code = game["gameCode"].split('/')[1] # e.g., 'BOSLAL'
 
-    # This is the list of "correct" AWAYHOME tricodes from the NBA API
-    today_game_codes = [g["gameCode"].split('/')[1] for g in all_game_scoreboard]
+                home_leader = game["gameLeaders"].get("homeLeaders", {})
+                away_leader = game["gameLeaders"].get("awayLeaders", {})
 
-    for teams in upcoming_games:
-        # --- START: New Logic ---
-
-        game = None
-        found_key = None
-
-        if teams in today_game_codes:
-            # The tricode (e.g., 'CHIDEN') was correct as-is
-            found_key = teams
-        else:
-            # The tricode was not found. Let's try reversing it.
-            if len(teams) == 6: # Safety check
-                # e.g., 'DENCHI' -> 'CHI' + 'DEN' = 'CHIDEN'
-                reversed_teams = teams[3:] + teams[:3]
-
-                if reversed_teams in today_game_codes:
-                    # The reversed key was correct!
-                    found_key = reversed_teams
-
-        if found_key:
-            # We found the game, using either the original or reversed key
-            game = next(g for g in all_game_scoreboard if found_key in g["gameCode"])
-
-            # --- END: New Logic ---
-
-            try:
-                home_leader = game["gameLeaders"]["homeLeaders"]
-                away_leader = game["gameLeaders"]["awayLeaders"]
-                home_score = game["homeTeam"]["score"]
-                away_score = game["awayTeam"]["score"]
-
+                # Build the game data object
                 data = {
                     "game_status": f"{convert_et_to_cst_conditional(game['gameStatusText'])}",
                     "quarter": game['gameStatusText'],
                     "game_started_yet": has_game_started(game["gameTimeUTC"]),
                     "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
-                    "best_stats_home": f'{home_leader["name"]} - {home_leader["points"]}pts - {home_leader["rebounds"]}rebs - {home_leader["assists"]}asts',
-                    "best_stats_away": f'{away_leader["name"]} - {away_leader["points"]}pts - {away_leader["rebounds"]}rebs - {away_leader["assists"]}asts',
-                    "home_score": home_score,
-                    "away_score": away_score,
-                    "game_id": game["gameId"]
-                }
-            except KeyError:
-                # If game leaders are missing
-                data = {
-                    "game_status": f"{convert_et_to_cst_conditional(game['gameStatusText'])}",
-                    "quarter": game['gameStatusText'],
-                    "game_started_yet": has_game_started(game["gameTimeUTC"]),
-                    "today_or_tomorrow": get_game_day_status(game["gameTimeUTC"]),
-                    "best_stats_home": "N/A",
-                    "best_stats_away": "N/A",
+                    "best_stats_home": f'{home_leader.get("name", "N/A")} - {home_leader.get("points", 0)}pts - {home_leader.get("rebounds", 0)}rebs - {home_leader.get("assists", 0)}asts',
+                    "best_stats_away": f'{away_leader.get("name", "N/A")} - {away_leader.get("points", 0)}pts - {away_leader.get("rebounds", 0)}rebs - {away_leader.get("assists", 0)}asts',
                     "home_score": game["homeTeam"]["score"],
                     "away_score": game["awayTeam"]["score"],
                     "game_id": game["gameId"]
                 }
+
+                # Store using the standard tricode (e.g. BOSLAL)
+                full_scoreboard_data[game_code] = data
+
+                # Also store reversed key just in case (LALBOS) to handle different source formats
+                if len(game_code) == 6:
+                    reversed_key = game_code[3:] + game_code[:3]
+                    full_scoreboard_data[reversed_key] = data
+
+            # 3. Save the COMPLETE processed data to Redis
+            set_cache("nba_scoreboard_live", full_scoreboard_data, CACHE_TIMEOUT)
+
+        except Exception as e:
+            print(f"Scoreboard API Error: {e}")
+            full_scoreboard_data = {}
+
+    # 4. Filter the full data for the specific games requested by the frontend
+    result_scoreboards = {}
+
+    for teams in upcoming_games:
+        if teams in full_scoreboard_data:
+            result_scoreboards[teams] = full_scoreboard_data[teams]
         else:
-            # Not found (even after reversing) → game is likely tomorrow or later
-            data = {
-                "game_status": "Tommorrow",
+            # Fallback for games not found (e.g. games tomorrow that aren't on today's scoreboard yet)
+            result_scoreboards[teams] = {
+                "game_status": "Tomorrow", # Or "Scheduled"
                 "game_started_yet": False,
                 "best_stats_home": "N/A",
                 "best_stats_away": "N/A",
@@ -87,12 +74,4 @@ def get_scoreboard_data(upcoming_games: list):
                 "game_id": None
             }
 
-        # We use the *original* `teams` key here so the frontend gets
-        # the data it asked for, regardless of which key we used to find it.
-        game_scoreboards[teams] = data
-
-    # 3. UPDATE CACHE: Store new data and timestamp
-    _SCOREBOARD_CACHE = game_scoreboards
-    _LAST_FETCH_TIME = time.time()
-
-    return game_scoreboards
+    return result_scoreboards

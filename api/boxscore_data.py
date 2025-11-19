@@ -1,8 +1,7 @@
 import requests
-import time
 from utils.time_conversions import convert_iso_minutes
+from utils.redis_service import get_cache, set_cache
 
-_BOXSCORE_CACHE = {}
 BOXSCORE_CACHE_TIMEOUT = 15
 BOXSCORE_URL_TEMPLATE = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{game_id}.json"
 
@@ -40,11 +39,16 @@ def _process_player_stats(player_data):
 
 
 def get_single_game_boxscore(game_id: str):
-    global _BOXSCORE_CACHE
+    """
+    Fetches the box score for a specific game ID.
+    Checks Redis cache first; otherwise fetches from NBA CDN.
+    """
 
-    # 1. Check Cache
-    if game_id in _BOXSCORE_CACHE and time.time() - _BOXSCORE_CACHE[game_id]['timestamp'] < BOXSCORE_CACHE_TIMEOUT:
-        return _BOXSCORE_CACHE[game_id]['data']
+    # 1. Check Redis Cache
+    cache_key = f"boxscore:{game_id}"
+    cached_data = get_cache(cache_key)
+    if cached_data:
+        return cached_data
 
     # 2. Fetch Fresh Data
     url = BOXSCORE_URL_TEMPLATE.format(game_id=game_id)
@@ -84,17 +88,13 @@ def get_single_game_boxscore(game_id: str):
             # Sort players by minutes (MIN) descending
             active_players.sort(key=lambda p: time_to_seconds(p['min']), reverse=True)
 
-
             processed_data[tricode] = { 'players': active_players }
 
         process_team(home_team)
         process_team(away_team)
 
-        # 4. Update Cache
-        _BOXSCORE_CACHE[game_id] = {
-            'data': processed_data,
-            'timestamp': time.time()
-        }
+        # 4. Update Redis Cache
+        set_cache(cache_key, processed_data, BOXSCORE_CACHE_TIMEOUT)
 
         return processed_data
 

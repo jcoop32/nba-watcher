@@ -6,21 +6,24 @@ from api.games_streams import get_basketball_games
 import time
 from utils.get_team_abbreves import team_colors, nba_logo_code, abv
 from db_service import get_all_replays, get_supabase_client
+from utils.redis_service import get_cache, set_cache
 
 current_date = date.today().strftime("%Y-%m-%d")
 
 app = Flask(__name__)
 
-RAW_GAMES_LIST = []
-_GAMES_LIST_CACHE_TIME = 0
 GAMES_LIST_CACHE_TIMEOUT = 3600
 
 def get_game_list_from_cache_or_api():
-    global RAW_GAMES_LIST, _GAMES_LIST_CACHE_TIME
-    if not RAW_GAMES_LIST or (time.time() - _GAMES_LIST_CACHE_TIME > GAMES_LIST_CACHE_TIMEOUT):
-        RAW_GAMES_LIST = get_basketball_games()
-        _GAMES_LIST_CACHE_TIME = time.time()
-    return RAW_GAMES_LIST
+    cached_games = get_cache("games_list")
+    if cached_games:
+        return cached_games
+
+    print("Cache miss: Fetching games from source...")
+    raw_games_list = get_basketball_games()
+    set_cache("games_list", raw_games_list, GAMES_LIST_CACHE_TIMEOUT)
+
+    return raw_games_list
 
 @app.route('/')
 def index():
@@ -160,6 +163,5 @@ def games_today():
     return jsonify(games)
 
 if __name__ == '__main__':
-    _GAMES_LIST_CACHE_TIME = time.time()
     app.run(host="0.0.0.0", debug=True)
     # app.run(debug=True)
