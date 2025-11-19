@@ -17,25 +17,30 @@ async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
     game_record['iframe_url'] = "Error: Failed"
 
     async with SEMAPHORE:
-        # Launch browser context
         browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+
+        context = await browser.new_context(
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        )
+
+        await context.route("**/*", lambda route: route.abort()
+            if route.request.resource_type in ["image", "media", "font", "stylesheet", "other"]
+            else route.continue_()
+        )
+
+        page = await context.new_page()
 
         print(f"[{game_id}] ⏳ Starting scrape for: {game_record['replay_url']}")
         iframe_src = None
 
         try:
-            # 1. Go to the primary replay page (slug)
-            await page.goto(url_to_scrape, wait_until='domcontentloaded', timeout=15000)
+            await page.goto(url_to_scrape, wait_until='domcontentloaded', timeout=20000)
             print(f"[{game_id}] Step 1/3: Loaded replay page: {page.url}")
 
-            # 2. Click the 'Watch' button and switch to the new page/tab
             try:
-                # Use expect_popup to intercept the new page opened by target="_blank"
                 async with page.expect_popup() as popup_info:
-                    await page.click('a.su-button:has-text("Watch")', timeout=10000)
+                    await page.click('a.su-button:has-text("Watch")', timeout=15000)
 
-                # Switch the focus to the new page/tab
                 new_page = await popup_info.value
 
                 # Wait for the new page to load its content
@@ -90,7 +95,6 @@ async def scrape_iframe_url(p: Playwright, game_record: dict) -> dict:
 
 async def run_replay_scraper(supabase_client: Client, table_name: str) -> int:
 
-    # Import the fetching function from db_service locally
     from db_service import get_games_to_scrape
 
     start_time = time.time()
@@ -157,9 +161,8 @@ async def run_replay_scraper(supabase_client: Client, table_name: str) -> int:
     print(f"Total time: {end_time - start_time:.2f} seconds.")
     print(f"Total rows scraped: {len(games_to_scrape)}")
     print(f"Rows updated successfully: {successful_updates}")
-    print(f"Rows failed/skipped: {failed_count + (len(games_to_scrape) - successful_updates) - failed_count}") # Simplified counting
+    print(f"Rows failed/skipped: {failed_count + (len(games_to_scrape) - successful_updates) - failed_count}")
 
-    # --- ADDED RETURN VALUE ---
     return successful_updates
 
 
