@@ -39,6 +39,11 @@
 
       <div id="score-panel">
         <div id="score-panel-header">
+          <div class="panel-nav">
+            <a href="{{ url_for('index') }}" class="nav-btn-link">
+              <span class="icon">🏠</span> Home
+            </a>
+          </div>
           <div id="stream-options">
             {% for stream_url in stream_info.streams %}
             <button
