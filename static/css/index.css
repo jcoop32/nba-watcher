@@ -1,356 +1,239 @@
+/* --- Midnight Courtside Theme: Index --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
+
+:root {
+  --bg-body: #09090b; /* Deep Zinc Black */
+  --bg-card: #18181b; /* Zinc 900 */
+  --border-color: #27272a; /* Zinc 800 */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --accent-blue: #3b82f6;
+  --accent-red: #ef4444;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+}
+
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 20px;
-  background-color: #1a1a1a; /* Dark Background */
-  color: #f0f0f0; /* Light Text */
+  background-color: var(--bg-body);
+  /* Subtle gradient background */
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    #1e293b 0%,
+    var(--bg-body) 70%
+  );
+  color: var(--text-primary);
+  min-height: 100vh;
 }
+
 .container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
-h1 {
-  color: #f0f0f0; /* Light H1 Text */
-  border-bottom: 2px solid #3d3d3d; /* Darker border */
-  padding-bottom: 10px;
-  margin-bottom: 30px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
 
-/* --- Game List Structure --- */
-.game-list {
-  list-style: none;
-  padding: 0;
-}
-.game-item {
-  background: #2c2c2c; /* Dark Card Background */
-  margin-bottom: 16px;
-  padding: 20px 25px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Stronger shadow */
-  border-left: 5px solid #4a4a4a; /* Default dark neutral border */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  transition: all 0.2s ease-in-out;
-}
-.game-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Highlight for LIVE games */
-.game-item.live {
-  border-left: 5px solid #e53e3e; /* Red border for live */
-}
-
-/* --- Game Content --- */
-.game-content {
-  flex-grow: 1;
-}
-
-/* --- NEW Logo/Header Styling --- */
-.game-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-  width: 100%;
-}
-
-.team-logo {
-  height: 30px; /* Standard size for logos */
-  width: 30px;
-  /* Optional: Add a light filter for contrast against dark card background, especially if logos are dark */
-  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.4));
-}
-
-.away-team-logo {
-  margin-right: 15px;
-}
-
-.home-team-logo {
-  margin-left: 15px;
-}
-
-.game-title-text {
-  /* Keep title text small between logos */
-  font-size: 1em;
-  color: #f0f0f0;
-  font-weight: 700;
-  white-space: nowrap;
-  margin: 0;
-}
-/* Ensure the score line follows the logos */
-.score-status-line {
-  display: block; /* Force the line break after the header */
-  margin-top: 5px;
-}
-/* Adjustments to strong element since it no longer holds the main title */
-.game-info strong {
-  font-size: 1em; /* Reset font size, using specific classes now */
-  display: inline;
-  margin-bottom: 0;
-}
-
-/* Score and Status Line */
-.live-score-status {
-  font-size: 0.9em;
-  color: #a0a0a0; /* Secondary gray text */
-  font-weight: 500;
-}
-
-.live-score-text {
-  font-weight: 700;
-  color: #f0f0f0;
-  margin-right: 5px;
-}
-
-.game-details {
-  font-size: 0.85em;
-  color: #718096; /* Lighter secondary text */
-  margin-top: 5px;
-}
-
-.last-event-text {
-  color: #48bb78; /* Highlight last event (Green) */
-  font-style: italic;
-  margin-top: 8px;
-}
-
-/* --- Watch Link Button --- */
-.watch-link {
-  /* background is now set by JavaScript */
-  color: white;
-  padding: 10px 20px;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: all 0.3s;
-  margin-top: 15px;
-  align-self: flex-end;
-  /* box-shadow is now set by JavaScript */
-}
-.watch-link:hover {
-  filter: brightness(1.2); /* Brightens the entire gradient on hover */
-}
-
-/* --- Responsive Layout --- */
-@media (min-width: 600px) {
-  .game-item {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .game-content {
-    max-width: 70%;
-  }
-  .watch-link {
-    margin-top: 0;
-  }
-}
-
-/* Mobile/Small Screen Adjustment: Center logos/title */
-@media (max-width: 599px) {
-  .game-header {
-    justify-content: center;
-  }
-  .game-content {
-    align-items: center;
-  }
-}
-
-/* Styling for the new header wrapper */
+/* --- Modern Header --- */
 .page-header-container {
   display: flex;
-  justify-content: space-between; /* Pushes H1 and button apart */
-  align-items: center; /* Vertically aligns them */
-  margin-bottom: 30px; /* Provides space before the game list */
-  border-bottom: 2px solid #3d3d3d;
-  padding-bottom: 10px;
-}
-
-/* Ensure the H1 doesn't have its own margin-bottom anymore */
-.page-header-container h1 {
-  margin: 0;
-  padding: 0;
-  border-bottom: none; /* Remove the old border from H1 */
-}
-
-/* Style the button link to look similar to the watch links */
-.replays-link-button {
-  background-color: #3182ce; /* A nice blue color */
-  color: white;
-  padding: 8px 15px;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: all 0.2s;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  white-space: nowrap;
-}
-
-.replays-link-button:hover {
-  background-color: #2b6cb0;
-  filter: brightness(1.1);
-}
-
-/* --- New Multiview Styles --- */
-
-/* Utility class to hide elements */
-.hidden {
-  display: none !important;
-}
-
-/* New wrapper for header buttons */
-.header-actions {
-  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
   gap: 15px;
 }
 
-/* Style for the main launch button */
-#launch-multiview-btn {
-  background-color: #c53030; /* Red */
-}
-#launch-multiview-btn:hover {
-  background-color: #e53e3e;
-}
-
-/* New wrapper for game card buttons */
-.game-actions {
-  display: flex;
-  flex-direction: column; /* Stack buttons vertically on mobile */
-  gap: 8px;
-  margin-top: 15px;
-  width: 100%;
-}
-
-/* Style for the individual "+ Multiview" button */
-.multiview-link {
-  background-color: #3182ce;
-  opacity: 0.7;
-  color: white;
-  padding: 10px 20px;
-  text-decoration: none;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.9em; /* Match watch-link */
-  text-align: center;
-}
-.multiview-link:hover {
-  opacity: 1;
-}
-.multiview-link.selected {
-  background-color: #48bb78; /* Green */
-  opacity: 1;
-}
-
-/* --- Adjustments to existing styles --- */
-
-/* Make watch-link fill its space */
-.watch-link {
-  margin-top: 0;
-  align-self: auto;
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't break layout */
-}
-
-/* Adjust layout for desktop */
-@media (min-width: 600px) {
-  .game-item {
-    align-items: center;
-  }
-  .game-actions {
-    flex-direction: row; /* Buttons side-by-side on desktop */
-    margin-top: 0;
-    width: auto; /* Let buttons size themselves */
-  }
-  .watch-link {
-    width: auto;
-  }
-}
-
-/* Adjust header layout on mobile */
-@media (max-width: 599px) {
-  .page-header-container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .header-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 10px;
-    margin-top: 15px;
-  }
-  .replays-link-button,
-  #launch-multiview-btn {
-    text-align: center;
-  }
-}
-
-/* Add this to your existing static/css/index.css file */
-
-/* Update the page header container */
-.page-header-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.page-header-container h1 {
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
   margin: 0;
+  letter-spacing: -0.03em;
+  /* Removed gradient text clip which was breaking emojis */
+  color: #f4f4f5; /* Solid white/zinc color */
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1); /* Subtle glow instead */
 }
 
-/* Button container for replays and multiview */
-.nav-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Style for both replays and multiview buttons */
 .replays-link-button {
-  padding: 0.6rem 1.2rem;
-  background: #3182ce;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
   text-decoration: none;
-  border-radius: 4px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
   font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  border: none;
-  cursor: pointer;
-  min-width: 160px;
-  text-align: center;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .replays-link-button:hover {
-  background: #2b6cb0;
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.replays-link-button:active {
-  transform: translateY(0);
+/* --- Grid Layout for Games --- */
+.game-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(320px, 1fr)
+  ); /* Responsive Grid */
+  gap: 24px;
 }
 
-/* Mobile responsive */
-@media (max-width: 640px) {
-  .nav-buttons {
-    flex-direction: column;
-    width: 100%;
-    padding: 0 1rem;
+.game-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.game-item:hover {
+  transform: translateY(-5px);
+  border-color: #3f3f46;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Live Pulse Effect */
+.game-item.live {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+}
+
+.game-item.live::before {
+  content: '● LIVE';
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--accent-red);
+  animation: pulse 2s infinite;
+  z-index: 2;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
   }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 
-  .replays-link-button {
-    width: 100%;
-    min-width: unset;
+.game-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* --- Logos & Titles --- */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.team-logo {
+  width: 60px;
+  height: 60px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.game-item:hover .team-logo {
+  transform: scale(1.1);
+}
+
+.game-title-text {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+/* --- Scores --- */
+.score-status-line {
+  margin-top: 5px;
+  text-align: center;
+}
+
+.live-score-text {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.game-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* --- Buttons --- */
+.watch-link {
+  width: 100%;
+  padding: 14px 0;
+  text-align: center;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  color: #fff !important;
+  text-decoration: none;
+  /* Fallback bg, actual bg set by JS gradients */
+  background: #3f3f46;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.watch-link:hover {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Mobile --- */
+@media (max-width: 600px) {
+  .page-header-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  h1 {
+    text-align: center;
+  }
+  .game-list {
+    grid-template-columns: 1fr;
   }
 }

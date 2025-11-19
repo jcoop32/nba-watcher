@@ -12,7 +12,7 @@
   <body>
     <div class="container">
       <div class="page-header-container">
-        <h1>🏀 Basketball Streams</h1>
+        <h1><span>🏀</span> Basketball Streams</h1>
 
         <a href="{{ url_for('replays_index') }}" class="replays-link-button">
           Watch Game Replays 📼
@@ -64,7 +64,7 @@
             {% if sb_data[game.teams]["game_started_yet"] %}
             <div class="game-details">
               <span>{{ sb_data[game.teams]["best_stats_away"] }}</span>
-              <span> | </span>
+              <hr />
               <span>{{ sb_data[game.teams]["best_stats_home"] }}</span>
             </div>
             {% endif %}
