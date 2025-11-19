@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import pytz
 import re
+import time
 
 def convert_time_and_check_day_12hr(est_time_str: str) -> str:
     """
@@ -285,3 +286,15 @@ def convert_ms_timestamp_to_12hr(ms_timestamp):
 
     except (ValueError, TypeError, OSError):
         return "Error: Invalid timestamp provided"
+
+
+def has_date_passed(timestamp_ms):
+    """
+    Returns True if the input timestamp (ms) is in the past.
+    Returns False if it is in the future.
+    """
+    # Get current time in seconds and convert to milliseconds
+    current_time_ms = time.time() * 1000
+
+    # Check if the input time is less than the current time
+    return timestamp_ms < current_time_ms

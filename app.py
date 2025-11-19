@@ -3,7 +3,7 @@ from flask_compress import Compress
 from api.scoreboard_data import get_scoreboard_data
 from api.boxscore_data import get_single_game_boxscore
 from datetime import date, datetime
-from api.games_streams import get_basketball_games
+from api.games_streams import get_basketball_games,  get_euro_basketball_games
 from utils.get_team_abbreves import team_colors, nba_logo_code, abv
 from services.db_service import get_all_replays, get_supabase_client
 from services.redis_service import get_cache, set_cache
@@ -19,15 +19,26 @@ current_date = date.today().strftime("%Y-%m-%d")
 GAMES_LIST_CACHE_TIMEOUT = 3600
 
 def get_game_list_from_cache_or_api():
-    cached_games = get_cache("games_list")
+    cached_games = get_cache("nba_games_list")
     if cached_games:
         return cached_games
 
     print("Cache miss: Fetching games from source...")
     raw_games_list = get_basketball_games()
-    set_cache("games_list", raw_games_list, GAMES_LIST_CACHE_TIMEOUT)
+    set_cache("nba_games_list", raw_games_list, GAMES_LIST_CACHE_TIMEOUT)
 
     return raw_games_list
+
+# --- New Cache Wrapper ---
+def get_euro_games_from_cache_or_api():
+    cached_games = get_cache("euro_games_list")
+    if cached_games:
+        return cached_games
+
+    print("Fetching other leagues from source...")
+    raw_games = get_euro_basketball_games()
+    set_cache("euro_games_list", raw_games, 3600) # Cache for 1 hour
+    return raw_games
 
 @app.route('/')
 def index():
@@ -56,29 +67,51 @@ def index():
                            sb_data=scoreboard_data,
                            earliest_timestamp=earliest_timestamp)
 
+
+@app.route('/euro-league')
+def euro_leagues():
+    games_list = get_euro_games_from_cache_or_api()
+    return render_template('euro_league_games.html', games=games_list)
+
+
 @app.route('/stream/<stream_id>')
 def stream_viewer(stream_id):
+    # 1. Try Main NBA List
     games_list = get_game_list_from_cache_or_api()
     BASKETBALL_STREAMS = {stream['id']: stream for stream in games_list}
     stream_info = BASKETBALL_STREAMS.get(stream_id)
 
+    game_id_nba = None
+    game_started = False
+
+    # 2. If not found, try Other Leagues List
+    if not stream_info:
+        other_games = get_euro_games_from_cache_or_api()
+        OTHER_STREAMS = {stream['id']: stream for stream in other_games}
+        stream_info = OTHER_STREAMS.get(stream_id)
+
     if stream_info:
-        scoreboard_data_raw = get_scoreboard_data([stream_info['teams']])
-        game_id_nba = scoreboard_data_raw.get(stream_info.get("teams")).get("game_id")
-        game_data = scoreboard_data_raw.get(stream_info.get("teams"))
-        game_started = game_data.get("game_started_yet")
+        # Only try to get NBA scoreboard data if it looks like an NBA game (has specific teams key)
+        if stream_info.get("teams") != "OTHER":
+            scoreboard_data_raw = get_scoreboard_data([stream_info['teams']])
+            if scoreboard_data_raw and stream_info.get("teams") in scoreboard_data_raw:
+                game_data = scoreboard_data_raw.get(stream_info.get("teams"))
+                game_id_nba = game_data.get("game_id")
+                game_started = game_data.get("game_started_yet")
 
         if not stream_info.get('streams'):
             abort(404, description="Stream found, but embed URL list is missing.")
+
         return render_template('stream.html',
                                stream_info=stream_info,
                                title=stream_info['title'],
-                               game_id_nba=game_id_nba,
+                               game_id_nba=game_id_nba, # Will be None for other leagues, disabling boxscore
                                teams=stream_info['teams'],
                                game_started=game_started
                                )
     else:
-        abort(404, description=f"stream ID {stream_id} not found in the basketball list.")
+        abort(404, description=f"stream ID {stream_id} not found.")
+
 
 @app.route('/replays')
 def replays_index():
