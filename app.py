@@ -3,6 +3,8 @@ from flask_compress import Compress
 from api.scoreboard_data import get_scoreboard_data
 from api.boxscore_data import get_single_game_boxscore
 from datetime import date, datetime
+import time
+import threading
 from api.games_streams import get_basketball_games,  get_euro_basketball_games
 from utils.get_team_abbreves import team_colors, nba_logo_code, abv
 from services.db_service import get_all_replays, get_supabase_client
@@ -18,24 +20,44 @@ current_date = date.today().strftime("%Y-%m-%d")
 
 GAMES_LIST_CACHE_TIMEOUT = 3600
 
+def background_cache_worker():
+    """
+    Runs in the background to keep game data fresh.
+    This prevents the UI from ever waiting on the slow external APIs.
+    """
+    while True:
+        try:
+            nba_games = get_basketball_games()
+            if nba_games:
+                set_cache("nba_games_list", nba_games, GAMES_LIST_CACHE_TIMEOUT)
+
+            euro_games = get_euro_basketball_games()
+            if euro_games:
+                set_cache("euro_games_list", euro_games, GAMES_LIST_CACHE_TIMEOUT)
+
+        except Exception as e:
+            print(f"[Background Worker] ❌ Error updating cache: {e}")
+
+        time.sleep(1800)
+
+cache_thread = threading.Thread(target=background_cache_worker, daemon=True)
+cache_thread.start()
+
 def get_game_list_from_cache_or_api():
     cached_games = get_cache("nba_games_list")
     if cached_games:
         return cached_games
 
-    print("Cache miss: Fetching games from source...")
     raw_games_list = get_basketball_games()
     set_cache("nba_games_list", raw_games_list, GAMES_LIST_CACHE_TIMEOUT)
 
     return raw_games_list
 
-# --- New Cache Wrapper ---
 def get_euro_games_from_cache_or_api():
     cached_games = get_cache("euro_games_list")
     if cached_games:
         return cached_games
 
-    print("Fetching other leagues from source...")
     raw_games = get_euro_basketball_games()
     set_cache("euro_games_list", raw_games, 3600) # Cache for 1 hour
     return raw_games

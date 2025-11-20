@@ -22,12 +22,10 @@ function toggleMultiviewSelection(button) {
   const index = multiviewSelections.indexOf(gameId);
 
   if (index > -1) {
-    // Already selected, so remove it
     multiviewSelections.splice(index, 1);
     button.classList.remove('selected');
     button.textContent = '+ Multiview';
   } else {
-    // Not selected, so add it (if not full)
     if (multiviewSelections.length >= maxSelections) {
       alert(`You can only select up to ${maxSelections} games for multiview.`);
       return;
@@ -56,12 +54,10 @@ function launchMultiview() {
   const gameIds = multiviewSelections.join(',');
   const url = `/multiview?games=${gameIds}`;
 
-  // Open in a new tab
   window.open(url, '_blank');
 }
 
 function updateScoreboard() {
-  // Fetch data from the new Flask API endpoint
   fetch('/api/scoreboard')
     .then(response => {
       if (!response.ok) {
@@ -70,11 +66,9 @@ function updateScoreboard() {
       return response.json();
     })
     .then(data => {
-      // 'data' is the JSON object returned by /api/scoreboard, keyed by team code (e.g., 'LALBOS')
       for (const teamsKey in data) {
         if (data.hasOwnProperty(teamsKey)) {
           const gameData = data[teamsKey];
-          // Find the corresponding game item on the page using the data-teams attribute
           const gameItem = document.querySelector(
             `.game-item[data-teams="${teamsKey}"]`,
           );
@@ -86,12 +80,10 @@ function updateScoreboard() {
             );
 
             if (gameData.game_started_yet) {
-              // Update the score if the game is live or finished
               if (scoreText) {
                 scoreText.textContent = `${gameData.away_score} - ${gameData.home_score}`;
               }
 
-              // Update the game status/quarter
               statusElement.textContent = `| ${gameData.game_status}`;
             }
           }
@@ -103,7 +95,6 @@ function updateScoreboard() {
     });
 }
 
-// Function to initialize button gradients
 function initializeButtonGradients() {
   const LIGHT_COLORS = ['#FFFFFF', '#C4CED4'];
 
@@ -143,24 +134,35 @@ function startPollingManager() {
   console.log(`[Polling Manager] Current TS: ${now}`);
   console.log(`[Polling Manager] Target Start TS: ${targetTime}`);
 
+  // --- PERFORMANCE OPTIMIZATION START ---
+
+  const conditionalUpdate = () => {
+    if (document.visibilityState === 'visible') {
+      runUpdateCycle();
+    }
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      console.log('👁️ Tab visible again. Refreshing scoreboard...');
+      runUpdateCycle();
+    }
+  });
+
+  // --- PERFORMANCE OPTIMIZATION END ---
+
   if (EARLIEST_GAME_TS === 0 || now >= targetTime) {
-    // Start immediately if game is close, active, or timestamp missing
     console.log(
       '✅ Game time imminent or active. Starting polling immediately.',
     );
     runUpdateCycle();
-    pollingIntervalId = setInterval(runUpdateCycle, 20000);
+    pollingIntervalId = setInterval(conditionalUpdate, 20000);
   } else {
-    // Wait until target time
     const secondsToWait = targetTime - now;
-    console.log(
-      `⏳ Too early. Waiting ${secondsToWait} seconds to start polling.`,
-    );
 
     setTimeout(() => {
-      console.log('⏰ Waking up! Starting polling now.');
       runUpdateCycle();
-      pollingIntervalId = setInterval(runUpdateCycle, 20000);
+      pollingIntervalId = setInterval(conditionalUpdate, 20000);
     }, secondsToWait * 1000);
   }
 }
@@ -168,10 +170,8 @@ function startPollingManager() {
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Visual setups
   initializeButtonGradients();
   initializeMultiview();
 
-  // Start the logic to decide when to pull data
   startPollingManager();
 });

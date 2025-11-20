@@ -200,8 +200,25 @@ function fetchAndUpdateBoxScore() {
 if (typeof GAME_ID !== 'undefined') {
   // Only start polling if the game has actually started
   if (GAME_STARTED) {
+    // 1. Create a wrapper that checks visibility before fetching
+    const conditionalBoxScoreUpdate = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAndUpdateBoxScore();
+      }
+    };
+
+    // 2. Perform the initial fetch immediately
     fetchAndUpdateBoxScore();
-    boxScoreIntervalId = setInterval(fetchAndUpdateBoxScore, 10000);
+
+    // 3. Start the interval using the conditional wrapper
+    boxScoreIntervalId = setInterval(conditionalBoxScoreUpdate, 10000);
+
+    // 4. Add event listener to refresh immediately when user returns to tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchAndUpdateBoxScore();
+      }
+    });
   } else {
     // Optional: Update text to let user know why there are no stats
     document.getElementById('live-status').textContent =
