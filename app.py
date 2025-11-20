@@ -231,6 +231,11 @@ def games_today():
     games = get_game_list_from_cache_or_api()
     return jsonify_with_etag(games, app)
 
+@app.route('/api/euro-games')
+def api_euro_games():
+    games = get_euro_games_from_cache_or_api()
+    return jsonify_with_etag(games, app)
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
     # app.run(debug=True)

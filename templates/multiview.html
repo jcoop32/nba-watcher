@@ -10,7 +10,12 @@
     />
   </head>
   <body>
-    <a href="{{ url_for('index') }}" class="floating-home-btn"> 🏠 Home </a>
+    <div class="floating-controls">
+      <a href="{{ url_for('index') }}" class="floating-btn"> 🏠 Home </a>
+      <button class="floating-btn" onclick="toggleFullscreen()" id="fsBtn">
+        ⛶ Fullscreen
+      </button>
+    </div>
     <div class="multi-game-grid grid-0" id="gameGrid">
       <div class="empty-state">
         <h2>No Games Selected</h2>
