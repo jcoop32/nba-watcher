@@ -14,9 +14,20 @@
       <div class="page-header-container">
         <h1><span>🌍</span> EuroLeague / Other</h1>
 
-        <a href="{{ url_for('index') }}" class="replays-link-button">
-          Back to NBA 🏀
-        </a>
+        <div
+          style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"
+        >
+          <a href="{{ url_for('index') }}" class="replays-link-button">
+            Back to NBA 🏀
+          </a>
+          <button
+            id="view-toggle-btn"
+            class="replays-link-button"
+            style="cursor: pointer"
+          >
+            ☰ List View
+          </button>
+        </div>
       </div>
 
       {% if games %}
@@ -81,7 +92,7 @@
                     font-size: 0.9rem;
                     font-weight: 700;
                     line-height: 1.2;
-                    color: #f4f4f5;
+                    color: var(--text-primary);
                   "
                 >
                   {{ game.away_team_full }}
@@ -143,7 +154,7 @@
                     font-size: 0.9rem;
                     font-weight: 700;
                     line-height: 1.2;
-                    color: #f4f4f5;
+                    color: var(--text-primary);
                   "
                 >
                   {{ game.home_team_full }}
@@ -153,7 +164,7 @@
 
             <strong class="score-status-line">
               <span class="live-score-status">
-                <span class="game-details" style="color: #a1a1aa">
+                <span class="game-details" style="color: var(--text-secondary)">
                   {{ game.status }} <br />
                   <span style="font-size: 0.8rem; color: #71717a"
                     >{{ game.game_start }}</span
@@ -181,5 +192,10 @@
       </div>
       {% endif %}
     </div>
+
+    <script>
+      const EARLIEST_GAME_TS = 0;
+    </script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
   </body>
 </html>

@@ -13,16 +13,30 @@
     <div class="container">
       <div class="page-header-container">
         <h1><span>🏀</span> Basketball Streams</h1>
-        <a href="{{ url_for('euro_leagues') }}" class="replays-link-button">
-          EuroLeague/Other 🌍
-        </a>
-        <a href="{{ url_for('replays_index') }}" class="replays-link-button">
-          Watch Game Replays 📼
-        </a>
-        <a href="{{ url_for('multi_view') }}" class="replays-link-button">
-          Multiview (Beta) 🖥️
-        </a>
+
+        <div
+          style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap"
+        >
+          <a href="{{ url_for('euro_leagues') }}" class="replays-link-button">
+            EuroLeague 🌍
+          </a>
+          <a href="{{ url_for('replays_index') }}" class="replays-link-button">
+            Replays 📼
+          </a>
+          <a href="{{ url_for('multi_view') }}" class="replays-link-button">
+            Multiview 📺
+          </a>
+
+          <button
+            id="view-toggle-btn"
+            class="replays-link-button"
+            style="cursor: pointer"
+          >
+            ☰ List View
+          </button>
+        </div>
       </div>
+
       {% if games %}
       <ul class="game-list">
         {% for game in games %}
@@ -84,10 +98,7 @@
         {% endfor %}
       </ul>
       {% else %}
-      <p>
-        No basketball streams were loaded. Check API access or the hardcoded
-        index in `app.py`.
-      </p>
+      <p>No basketball streams were loaded.</p>
       {% endif %}
     </div>
 

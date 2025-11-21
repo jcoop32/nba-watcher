@@ -3,6 +3,7 @@ const maxSelections = 4;
 let launchButton = null;
 let pollingIntervalId = null;
 
+// --- Multiview Logic ---
 function initializeMultiview() {
   launchButton = document.getElementById('launch-multiview-btn');
   if (!launchButton) return;
@@ -50,19 +51,16 @@ function updateLaunchButton() {
 
 function launchMultiview() {
   if (multiviewSelections.length === 0) return;
-
   const gameIds = multiviewSelections.join(',');
   const url = `/multiview?games=${gameIds}`;
-
   window.open(url, '_blank');
 }
 
+// --- Scoreboard & UI Logic ---
 function updateScoreboard() {
   fetch('/api/scoreboard')
     .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!response.ok) throw new Error('Network response was not ok');
       return response.json();
     })
     .then(data => {
@@ -83,7 +81,6 @@ function updateScoreboard() {
               if (scoreText) {
                 scoreText.textContent = `${gameData.away_score} - ${gameData.home_score}`;
               }
-
               statusElement.textContent = `| ${gameData.game_status}`;
             }
           }
@@ -119,22 +116,17 @@ function initializeButtonGradients() {
   });
 }
 
-// --- NEW: Polling Gatekeeper Logic ---
-
+// --- Polling Gatekeeper Logic ---
 function runUpdateCycle() {
   updateScoreboard();
 }
 
 function startPollingManager() {
+  if (typeof EARLIEST_GAME_TS === 'undefined') return;
+
   const MINUTES_BEFORE = 10;
   const now = Math.floor(Date.now() / 1000);
   const targetTime = EARLIEST_GAME_TS - MINUTES_BEFORE * 60;
-
-  console.log(`[Polling Manager] Earliest Game TS: ${EARLIEST_GAME_TS}`);
-  console.log(`[Polling Manager] Current TS: ${now}`);
-  console.log(`[Polling Manager] Target Start TS: ${targetTime}`);
-
-  // --- PERFORMANCE OPTIMIZATION START ---
 
   const conditionalUpdate = () => {
     if (document.visibilityState === 'visible') {
@@ -144,22 +136,15 @@ function startPollingManager() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      console.log('👁️ Tab visible again. Refreshing scoreboard...');
       runUpdateCycle();
     }
   });
 
-  // --- PERFORMANCE OPTIMIZATION END ---
-
   if (EARLIEST_GAME_TS === 0 || now >= targetTime) {
-    console.log(
-      '✅ Game time imminent or active. Starting polling immediately.',
-    );
     runUpdateCycle();
     pollingIntervalId = setInterval(conditionalUpdate, 20000);
   } else {
     const secondsToWait = targetTime - now;
-
     setTimeout(() => {
       runUpdateCycle();
       pollingIntervalId = setInterval(conditionalUpdate, 20000);
@@ -167,11 +152,38 @@ function startPollingManager() {
   }
 }
 
-// --- Initialization ---
+// --- View Toggle Logic ---
+function setupViewToggle() {
+  const toggleBtn = document.getElementById('view-toggle-btn');
+  const gameLists = document.querySelectorAll('.game-list');
 
+  if (!toggleBtn || gameLists.length === 0) return;
+
+  const applyView = mode => {
+    gameLists.forEach(list => {
+      if (mode === 'list') list.classList.add('list-view');
+      else list.classList.remove('list-view');
+    });
+
+    toggleBtn.textContent = mode === 'list' ? '⊞ Grid View' : '☰ List View';
+    localStorage.setItem('nbaWatcher_viewMode', mode);
+  };
+
+  const savedMode = localStorage.getItem('nbaWatcher_viewMode') || 'grid';
+  applyView(savedMode);
+
+  toggleBtn.addEventListener('click', () => {
+    const currentMode = gameLists[0].classList.contains('list-view')
+      ? 'list'
+      : 'grid';
+    applyView(currentMode === 'list' ? 'grid' : 'list');
+  });
+}
+
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
   initializeButtonGradients();
   initializeMultiview();
-
   startPollingManager();
+  setupViewToggle();
 });
