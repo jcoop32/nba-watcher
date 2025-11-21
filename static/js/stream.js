@@ -172,9 +172,19 @@ function generateBoxScoreHTML(teamTricode, teamData) {
     let rowClass = p.is_oncourt ? 'oncourt' : '';
     if (p.is_starter) playerName = `<strong>*${playerName}</strong>`;
 
+    // --- UPDATED CELL ---
+    // We wrap the name in a div with the class 'player-name-cell' and add data attributes
     html += `
       <tr class="${rowClass}">
-        <td>${playerName}</td>
+        <td class="player-name-cell"
+            data-id="${p.id}"
+            data-name="${p.name}"
+            data-jersey="${p.jersey}"
+            onmouseenter="showPlayerCard(this)"
+            onmouseleave="hidePlayerCard(this)">
+            ${playerName}
+            <div class="player-card-tooltip" id="tooltip-${p.id}">Loading...</div>
+        </td>
         <td>${p.min}</td><td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
         <td>${p.fgm_fga}</td><td>${p.fg3m_fg3a}</td>
         <td>${p.stl}</td><td>${p.blk}</td><td>${p.to}</td>
@@ -184,6 +194,82 @@ function generateBoxScoreHTML(teamTricode, teamData) {
 
   html += `</tbody></table></div>`;
   return html;
+}
+
+const playerStatsCache = {};
+
+function showPlayerCard(cell) {
+  const playerId = cell.dataset.id;
+  const playerName = cell.dataset.name;
+  const jersey = cell.dataset.jersey;
+  const tooltip = cell.querySelector('.player-card-tooltip');
+
+  if (!playerId || playerId === '0') return;
+
+  tooltip.classList.add('visible');
+
+  if (playerStatsCache[playerId]) {
+    renderTooltipContent(
+      tooltip,
+      playerName,
+      jersey,
+      playerId,
+      playerStatsCache[playerId],
+    );
+    return;
+  }
+
+  fetch(`/api/player-card/${playerId}`)
+    .then(res => res.json())
+    .then(data => {
+      playerStatsCache[playerId] = data;
+      renderTooltipContent(tooltip, playerName, jersey, playerId, data);
+    })
+    .catch(err => {
+      tooltip.innerHTML =
+        '<p style="color: #ef4444; font-size: 0.8rem;">Stats unavailable</p>';
+    });
+}
+
+function hidePlayerCard(cell) {
+  const tooltip = cell.querySelector('.player-card-tooltip');
+  if (tooltip) {
+    tooltip.classList.remove('visible');
+  }
+}
+
+function renderTooltipContent(container, name, jersey, id, stats) {
+  if (!stats || Object.keys(stats).length === 0) {
+    container.innerHTML =
+      '<p style="color: #a1a1aa; font-size: 0.8rem;">No season stats available</p>';
+    return;
+  }
+
+  // NBA Headshot URL pattern
+  const imgUrl = `https://cdn.nba.com/headshots/nba/latest/1040x760/${id}.png`;
+
+  container.innerHTML = `
+    <div class="card-header">
+      <img src="${imgUrl}" class="card-headshot" onerror="this.src='https://cdn.nba.com/logos/nba/nba-logoman-75-plus/primary/L/logo.svg'">
+      <div class="card-info">
+        <h3>${name}</h3>
+        <span>#${jersey} • Season Stats</span>
+      </div>
+    </div>
+    <div class="card-stats-grid">
+      <div class="stat-item"><span class="stat-label">PPG</span><span class="stat-value">${stats.pts}</span></div>
+      <div class="stat-item"><span class="stat-label">RPG</span><span class="stat-value">${stats.reb}</span></div>
+      <div class="stat-item"><span class="stat-label">APG</span><span class="stat-value">${stats.ast}</span></div>
+
+      <div class="stat-item"><span class="stat-label">FG%</span><span class="stat-value">${stats.fg_pct}%</span></div>
+      <div class="stat-item"><span class="stat-label">3P%</span><span class="stat-value">${stats.fg3_pct}%</span></div>
+      <div class="stat-item"><span class="stat-label">FT%</span><span class="stat-value">${stats.ft_pct}%</span></div>
+
+      <div class="stat-item"><span class="stat-label">3PA</span><span class="stat-value">${stats.fg3a}</span></div>
+      <div class="stat-item"><span class="stat-label">STL</span><span class="stat-value">${stats.stl}</span></div>
+      <div class="stat-item"><span class="stat-label">BLK</span><span class="stat-value">${stats.blk}</span></div>
+    </div>
+  `;
 }
 
 function fetchAndUpdateBoxScore() {

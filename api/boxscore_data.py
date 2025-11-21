@@ -22,6 +22,8 @@ def _process_player_stats(player_data):
     minutes_formatted = convert_iso_minutes(minutes_iso)
 
     return {
+        'id': player_data.get('personId', 0),
+        'jersey': player_data.get('jerseyNum', ''),
         'name': player_data.get('name', ''),
         'min': minutes_formatted,
         'pts': stats.get('points', 0),
