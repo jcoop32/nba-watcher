@@ -10,6 +10,7 @@ from utils.get_team_abbreves import team_colors, nba_logo_code, abv
 from services.db_service import get_all_replays, get_supabase_client
 from services.redis_service import get_cache, set_cache
 from utils.optimizations import jsonify_with_etag, OrJSONProvider
+from api.momentum import get_momentum_data
 
 app = Flask(__name__)
 Compress(app)
@@ -113,6 +114,14 @@ def stream_viewer(stream_id):
         stream_info = OTHER_STREAMS.get(stream_id)
 
     if stream_info:
+        # --- NEW: Inject Team Colors for Chart ---
+        away_code = stream_info.get('away_tricode')
+        home_code = stream_info.get('home_tricode')
+        # Default to Zinc-400 if missing
+        stream_info['away_color'] = team_colors.get(away_code, '#a1a1aa')
+        stream_info['home_color'] = team_colors.get(home_code, '#a1a1aa')
+        # ------------------------------------------
+
         # Only try to get NBA scoreboard data if it looks like an NBA game (has specific teams key)
         if stream_info.get("teams") != "OTHER":
             scoreboard_data_raw = get_scoreboard_data([stream_info['teams']])
@@ -221,6 +230,11 @@ def api_scoreboard():
 def api_boxscore(game_id):
     boxscore_data = get_single_game_boxscore(game_id)
     return jsonify_with_etag(boxscore_data, app)
+
+@app.route('/api/momentum/<game_id>')
+def api_momentum(game_id):
+    data = get_momentum_data(game_id)
+    return jsonify_with_etag(data, app)
 
 @app.route('/multi-view')
 def multi_view():

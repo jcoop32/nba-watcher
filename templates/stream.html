@@ -8,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/stream.css') }}"
     />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div id="main-container">
@@ -59,6 +60,14 @@
             <h2>{{ title }}</h2>
             <p id="live-status">Loading Live Data...</p>
           </div>
+
+          <div
+            class="momentum-container"
+            style="height: 120px; width: 100%; margin: 10px 0; padding: 0 10px"
+          >
+            <canvas id="momentumChart"></canvas>
+          </div>
+
           <div id="boxscore-tabs">
             <div class="tab-nav"></div>
           </div>
@@ -71,6 +80,10 @@
       const GAME_ID = '{{ game_id_nba | safe }}';
       const TEAMS = '{{ teams | safe }}';
       const GAME_STARTED = '{{ game_started | tojson }}';
+      const AWAY_CODE = '{{ stream_info.away_tricode }}';
+      const HOME_CODE = '{{ stream_info.home_tricode }}';
+      const AWAY_COLOR = '{{ stream_info.away_color }}';
+      const HOME_COLOR = '{{ stream_info.home_color }}';
     </script>
     <script src="{{ url_for('static', filename='js/stream.js') }}"></script>
   </body>
