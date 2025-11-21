@@ -7,7 +7,7 @@ import time
 import threading
 from api.games_streams import get_basketball_games,  get_euro_basketball_games
 from utils.get_team_abbreves import team_colors, nba_logo_code, abv
-from services.db_service import get_all_replays, get_supabase_client
+from services.db_service import get_all_replays, get_supabase_client, increment_view_count
 from services.redis_service import get_cache, set_cache
 from utils.optimizations import jsonify_with_etag, OrJSONProvider
 from api.momentum import get_momentum_data
@@ -197,6 +197,7 @@ def replays_index():
 
 @app.route('/replay/<stream_id>')
 def replay_stream_viewer(stream_id):
+    increment_view_count(stream_id)
     supabase = get_supabase_client()
     try:
         response = supabase.table("nba_game_data_2025_26").select("iframe_url, away_team, home_team").eq("id", stream_id).limit(1).execute()
