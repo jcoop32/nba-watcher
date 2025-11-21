@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from api.played_games import scrape_nba_schedule
+from services.redis_service import get_cache, set_cache
 
 load_dotenv()
 
@@ -94,16 +95,46 @@ def get_games_to_scrape(limit: int = 1300) -> list:
         return []
 
 
+def increment_view_count(game_id):
+    """
+    Increments the view count in Supabase AND updates the Redis cache
+    so the UI reflects the change immediately.
+    """
+    try:
+        supabase = get_supabase_client()
+        game_id_int = int(game_id)
+        supabase.rpc('increment_views', {'row_id': game_id_int}).execute()
+
+        cache_key = "replays_list_full"
+        cached_games = get_cache(cache_key)
+
+        if cached_games:
+            game_found = False
+            for game in cached_games:
+                if str(game.get('id')) == str(game_id):
+                    current_views = game.get('views') or 0
+                    game['views'] = current_views + 1
+                    game_found = True
+                    break
+
+            if game_found:
+                set_cache(cache_key, cached_games, 43200)
+
+    except Exception as e:
+        print(f"❌ Failed to increment view count for {game_id}: {e}")
+
 def get_all_replays():
     try:
         supabase = get_supabase_client()
     except Exception as e:
         print(f"❌ Aborting replay fetch due to connection failure: {e}")
         return []
-
     try:
         response = (
-            supabase.table(table_name=TABLE_NAME).select("id, game_date, away_team, home_team, iframe_url, notes,  away_score, home_score").not_.is_("iframe_url", None).execute()
+            supabase.table(table_name=TABLE_NAME)
+            .select("id, game_date, away_team, home_team, iframe_url, notes, away_score, home_score, views")
+            .not_.is_("iframe_url", None)
+            .execute()
         )
         return response.data
     except Exception as e:

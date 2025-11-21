@@ -71,7 +71,21 @@
               {% endif %}
             </div>
           </div>
-
+          <div
+            style="
+              width: 100%;
+              display: flex;
+              justify-content: flex-end;
+              padding-bottom: 3px;
+              font-size: 0.75rem;
+              color: #71717a;
+              font-weight: 600;
+            "
+          >
+            <span style="display: flex; align-items: center; gap: 3px">
+              views: {{ game.views if game.views else 0}}
+            </span>
+          </div>
           <a
             href="{{ url_for('replay_stream_viewer', stream_id=game.id) }}"
             class="watch-link"
