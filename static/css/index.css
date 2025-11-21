@@ -1,4 +1,4 @@
-/* --- Midnight Courtside Theme: Index --- */
+/* --- Midnight Courtside Theme: Index (Dark Mode Only) --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
 
 :root {
@@ -9,15 +9,24 @@
   --text-secondary: #a1a1aa;
   --accent-blue: #3b82f6;
   --accent-red: #ef4444;
-  --accent-glow: rgba(59, 130, 246, 0.15);
+
+  /* Header Variables (Dark Glass) */
+  --bg-header: rgba(24, 24, 27, 0.75);
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Button Variables */
+  --btn-bg: rgba(255, 255, 255, 0.05);
+  --btn-border: rgba(255, 255, 255, 0.1);
+  --btn-hover-bg: rgba(59, 130, 246, 0.2);
+  --btn-hover-shadow: rgba(59, 130, 246, 0.3);
 }
 
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
-  padding: 20px;
+  padding: 20px 0 0 0;
   background-color: var(--bg-body);
-  /* Subtle gradient background */
   background-image: radial-gradient(
     circle at 50% 0%,
     #1e293b 0%,
@@ -30,41 +39,53 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px 20px 20px;
 }
 
-/* --- Modern Header --- */
+/* --- Floating Glass Header --- */
 .page-header-container {
+  position: sticky;
+  top: 20px;
+  z-index: 1000;
+
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  border-radius: 24px;
+  border: 1px solid var(--header-border);
+
+  box-shadow: var(--header-shadow);
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+
   margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
-  gap: 15px;
+  padding: 16px 30px;
+  width: 100%;
 }
 
 h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.03em;
-  /* Removed gradient text clip which was breaking emojis */
-  color: #f4f4f5; /* Solid white/zinc color */
-  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1); /* Subtle glow instead */
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(125, 125, 125, 0.1);
 }
 
 .replays-link-button {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
   color: var(--text-primary);
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 50px;
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -72,8 +93,8 @@ h1 {
 
 .replays-link-button:hover {
   border-color: var(--accent-blue);
-  background: rgba(59, 130, 246, 0.1);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  background: var(--btn-hover-bg);
+  box-shadow: 0 0 15px var(--btn-hover-shadow);
   transform: translateY(-1px);
 }
 
@@ -82,10 +103,7 @@ h1 {
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(320px, 1fr)
-  ); /* Responsive Grid */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
 }
 
@@ -104,7 +122,7 @@ h1 {
 .game-item:hover {
   transform: translateY(-5px);
   border-color: #3f3f46;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
 }
 
 /* Live Pulse Effect */
@@ -158,7 +176,7 @@ h1 {
 .team-logo {
   width: 60px;
   height: 60px;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
   transition: transform 0.3s ease;
 }
 
@@ -190,7 +208,7 @@ h1 {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .game-details {
@@ -212,7 +230,6 @@ h1 {
   letter-spacing: 0.5px;
   color: #fff !important;
   text-decoration: none;
-  /* Fallback bg, actual bg set by JS gradients */
   background: #3f3f46;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -221,7 +238,7 @@ h1 {
 .watch-link:hover {
   filter: brightness(1.2);
   transform: scale(1.02);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* --- Mobile --- */
@@ -235,5 +252,118 @@ h1 {
   }
   .game-list {
     grid-template-columns: 1fr;
+  }
+}
+
+/* --- LIST VIEW OVERRIDES --- */
+.game-list.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-list.list-view .game-item {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  min-height: 80px !important;
+  height: auto !important;
+  gap: 20px;
+}
+
+.game-list.list-view .game-content {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 0;
+  width: auto;
+  flex-grow: 1;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.game-list.list-view .game-header {
+  width: auto;
+  margin-bottom: 0 !important;
+  justify-content: flex-start;
+  gap: 15px;
+  position: static;
+}
+
+.game-list.list-view .team-logo {
+  width: 35px;
+  height: 35px;
+  transform: none !important;
+}
+
+.game-list.list-view .game-title-text {
+  position: static;
+  transform: none;
+  font-size: 0.95rem;
+  width: auto;
+  margin: 0;
+  text-align: left;
+  white-space: nowrap;
+  order: 0;
+}
+
+.game-list.list-view .score-status-line {
+  margin-top: 0;
+  margin-left: 0;
+  text-align: left;
+  border-left: 1px solid var(--border-color);
+  padding-left: 20px;
+  min-width: 150px;
+}
+
+.game-list.list-view .live-score-text {
+  font-size: 1.1rem;
+}
+
+.game-list.list-view .game-details {
+  display: none;
+}
+
+.game-list.list-view .watch-link {
+  width: auto;
+  min-width: 140px;
+  padding: 10px 20px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* --- EUROLEAGUE SPECIFIC FIXES --- */
+.game-list.list-view .game-header > div {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  gap: 8px;
+}
+
+.game-list.list-view .game-header > div:nth-child(2) {
+  font-size: 0.8rem !important;
+  margin-top: 0 !important;
+  width: auto !important;
+}
+
+.game-list.list-view .game-header span {
+  text-align: left !important;
+  font-size: 0.9rem !important;
+}
+
+@media (max-width: 900px) {
+  .game-list.list-view .game-item {
+    flex-wrap: wrap;
+  }
+  .game-list.list-view .score-status-line {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 50px;
+    width: 100%;
+  }
+  .game-list.list-view .watch-link {
+    margin-left: auto;
   }
 }
