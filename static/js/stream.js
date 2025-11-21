@@ -245,15 +245,16 @@ function renderTooltipContent(container, name, jersey, id, stats) {
     return;
   }
 
-  // NBA Headshot URL pattern
   const imgUrl = `https://cdn.nba.com/headshots/nba/latest/1040x760/${id}.png`;
+  // Default to 0 if GP is missing for some reason
+  const gamesPlayed = stats.gp || 0;
 
   container.innerHTML = `
     <div class="card-header">
       <img src="${imgUrl}" class="card-headshot" onerror="this.src='https://cdn.nba.com/logos/nba/nba-logoman-75-plus/primary/L/logo.svg'">
       <div class="card-info">
         <h3>${name}</h3>
-        <span>#${jersey} • Season Stats</span>
+        <span>#${jersey} • 2025-2026 • GP - ${gamesPlayed}</span>
       </div>
     </div>
     <div class="card-stats-grid">
@@ -263,9 +264,9 @@ function renderTooltipContent(container, name, jersey, id, stats) {
 
       <div class="stat-item"><span class="stat-label">FG%</span><span class="stat-value">${stats.fg_pct}%</span></div>
       <div class="stat-item"><span class="stat-label">3P%</span><span class="stat-value">${stats.fg3_pct}%</span></div>
-      <div class="stat-item"><span class="stat-label">FT%</span><span class="stat-value">${stats.ft_pct}%</span></div>
-
       <div class="stat-item"><span class="stat-label">3PA</span><span class="stat-value">${stats.fg3a}</span></div>
+
+      <div class="stat-item"><span class="stat-label">FT%</span><span class="stat-value">${stats.ft_pct}%</span></div>
       <div class="stat-item"><span class="stat-label">STL</span><span class="stat-value">${stats.stl}</span></div>
       <div class="stat-item"><span class="stat-label">BLK</span><span class="stat-value">${stats.blk}</span></div>
     </div>
