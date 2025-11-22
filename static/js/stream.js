@@ -2,6 +2,8 @@ const streamIframe = document.getElementById('full-screen-iframe');
 const clickAbsorber = document.getElementById('click-absorber');
 let hasForwardedClick = false;
 let momentumChart = null;
+let globalTooltip = null;
+const playerStatsCache = {};
 
 // --- Set stream source ---
 function setStream(url, buttonElement) {
@@ -150,6 +152,144 @@ function initStaticTabs() {
   }
 }
 
+// --- Global Tooltip Initialization ---
+function initGlobalTooltip() {
+  if (document.getElementById('global-player-tooltip')) return;
+
+  globalTooltip = document.createElement('div');
+  globalTooltip.id = 'global-player-tooltip';
+  globalTooltip.className = 'player-card-tooltip';
+  document.body.appendChild(globalTooltip);
+}
+
+function showPlayerCard(cell) {
+  const playerId = cell.dataset.id;
+  const playerName = cell.dataset.name;
+  const jersey = cell.dataset.jersey;
+
+  if (!globalTooltip) initGlobalTooltip();
+
+  if (!playerId || playerId === '0') return;
+
+  // 1. Reset and Show (Transparent) to measure
+  globalTooltip.style.opacity = '0';
+  globalTooltip.style.display = 'block';
+
+  // Helper to safely position the card
+  const positionCard = () => {
+    const tooltipWidth = globalTooltip.offsetWidth;
+    const tooltipHeight = globalTooltip.offsetHeight;
+    const windowHeight = window.innerHeight;
+    const rect = cell.getBoundingClientRect();
+
+    // --- HORIZONTAL: LEFT SIDE PREFERENCE ---
+    // Position to the left of the name (over the stream)
+    let leftPos = rect.left - tooltipWidth - 10;
+
+    // Safety check: If it goes off the left edge, flip to right
+    if (leftPos < 10) {
+      leftPos = rect.right + 10;
+    }
+
+    // --- VERTICAL: BOUNDARY PROTECTION ---
+    // Start centered relative to the row
+    let topPos = rect.top + rect.height / 2 - tooltipHeight / 2;
+
+    // Bottom Check: If it hits the bottom, pin it to the bottom margin
+    if (topPos + tooltipHeight > windowHeight - 10) {
+      topPos = windowHeight - tooltipHeight - 10;
+    }
+
+    // Top Check: If it hits the top, pin it to the top margin
+    if (topPos < 10) {
+      topPos = 10;
+    }
+
+    globalTooltip.style.left = `${leftPos}px`;
+    globalTooltip.style.top = `${topPos}px`;
+  };
+
+  // Initial Position (for "Loading..." state)
+  positionCard();
+  globalTooltip.style.opacity = '1';
+  globalTooltip.classList.add('visible');
+
+  // Check cache
+  if (playerStatsCache[playerId]) {
+    renderTooltipContent(
+      globalTooltip,
+      playerName,
+      jersey,
+      playerId,
+      playerStatsCache[playerId],
+    );
+    // CRITICAL: Re-position immediately because content size changed!
+    positionCard();
+    return;
+  }
+
+  // Loading State
+  globalTooltip.innerHTML =
+    '<div style="padding:10px; color:#a1a1aa; font-size:0.8rem;">Loading Stats...</div>';
+
+  fetch(`/api/player-card/${playerId}`)
+    .then(r => r.json())
+    .then(data => {
+      playerStatsCache[playerId] = data;
+      renderTooltipContent(globalTooltip, playerName, jersey, playerId, data);
+
+      // CRITICAL: Re-position again after new stats render
+      // This fixes the "bottom cutoff" bug because we now know the real height
+      positionCard();
+    })
+    .catch(err => {
+      console.error(err);
+      globalTooltip.innerHTML =
+        '<div style="padding:10px; color:#ef4444; font-size:0.8rem;">Stats Unavailable</div>';
+    });
+}
+
+function hidePlayerCard(cell) {
+  if (globalTooltip) {
+    globalTooltip.classList.remove('visible');
+  }
+}
+
+function renderTooltipContent(container, name, jersey, id, stats) {
+  if (!stats || Object.keys(stats).length === 0) {
+    container.innerHTML =
+      '<p style="color: #a1a1aa; font-size: 0.8rem;">No season stats available</p>';
+    return;
+  }
+
+  const imgUrl = `https://cdn.nba.com/headshots/nba/latest/1040x760/${id}.png`;
+  const gamesPlayed = stats.gp || 0;
+
+  container.innerHTML = `
+    <div class="card-header">
+      <img src="${imgUrl}" class="card-headshot" onerror="this.src='https://cdn.nba.com/logos/nba/nba-logoman-75-plus/primary/L/logo.svg'">
+      <div class="card-info">
+        <h3>${name}</h3>
+        <span>#${jersey} • 25-26 Stats • GP: ${gamesPlayed}</span>
+      </div>
+    </div>
+    <div class="card-stats-grid">
+      <div class="stat-item"><span class="stat-label">PPG</span><span class="stat-value">${stats.pts}</span></div>
+      <div class="stat-item"><span class="stat-label">RPG</span><span class="stat-value">${stats.reb}</span></div>
+      <div class="stat-item"><span class="stat-label">APG</span><span class="stat-value">${stats.ast}</span></div>
+
+      <div class="stat-item"><span class="stat-label">FG%</span><span class="stat-value">${stats.fg_pct}%</span></div>
+      <div class="stat-item"><span class="stat-label">3P%</span><span class="stat-value">${stats.fg3_pct}%</span></div>
+      <div class="stat-item"><span class="stat-label">3PA</span><span class="stat-value">${stats.fg3a}</span></div>
+
+      <div class="stat-item"><span class="stat-label">FT%</span><span class="stat-value">${stats.ft_pct}%</span></div>
+      <div class="stat-item"><span class="stat-label">STL</span><span class="stat-value">${stats.stl}</span></div>
+      <div class="stat-item"><span class="stat-label">BLK</span><span class="stat-value">${stats.blk}</span></div>
+    </div>
+  `;
+}
+
+// --- HTML Generation (Updated) ---
 function generateBoxScoreHTML(teamTricode, teamData) {
   let html = `
     <div id="tab-content-${teamTricode}" class="tab-content">
@@ -172,8 +312,6 @@ function generateBoxScoreHTML(teamTricode, teamData) {
     let rowClass = p.is_oncourt ? 'oncourt' : '';
     if (p.is_starter) playerName = `<strong>*${playerName}</strong>`;
 
-    // --- UPDATED CELL ---
-    // We wrap the name in a div with the class 'player-name-cell' and add data attributes
     html += `
       <tr class="${rowClass}">
         <td class="player-name-cell"
@@ -183,7 +321,6 @@ function generateBoxScoreHTML(teamTricode, teamData) {
             onmouseenter="showPlayerCard(this)"
             onmouseleave="hidePlayerCard(this)">
             ${playerName}
-            <div class="player-card-tooltip" id="tooltip-${p.id}">Loading...</div>
         </td>
         <td>${p.min}</td><td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
         <td>${p.fgm_fga}</td><td>${p.fg3m_fg3a}</td>
@@ -194,83 +331,6 @@ function generateBoxScoreHTML(teamTricode, teamData) {
 
   html += `</tbody></table></div>`;
   return html;
-}
-
-const playerStatsCache = {};
-
-function showPlayerCard(cell) {
-  const playerId = cell.dataset.id;
-  const playerName = cell.dataset.name;
-  const jersey = cell.dataset.jersey;
-  const tooltip = cell.querySelector('.player-card-tooltip');
-
-  if (!playerId || playerId === '0') return;
-
-  tooltip.classList.add('visible');
-
-  if (playerStatsCache[playerId]) {
-    renderTooltipContent(
-      tooltip,
-      playerName,
-      jersey,
-      playerId,
-      playerStatsCache[playerId],
-    );
-    return;
-  }
-
-  fetch(`/api/player-card/${playerId}`)
-    .then(res => res.json())
-    .then(data => {
-      playerStatsCache[playerId] = data;
-      renderTooltipContent(tooltip, playerName, jersey, playerId, data);
-    })
-    .catch(err => {
-      tooltip.innerHTML =
-        '<p style="color: #ef4444; font-size: 0.8rem;">Stats unavailable</p>';
-    });
-}
-
-function hidePlayerCard(cell) {
-  const tooltip = cell.querySelector('.player-card-tooltip');
-  if (tooltip) {
-    tooltip.classList.remove('visible');
-  }
-}
-
-function renderTooltipContent(container, name, jersey, id, stats) {
-  if (!stats || Object.keys(stats).length === 0) {
-    container.innerHTML =
-      '<p style="color: #a1a1aa; font-size: 0.8rem;">No season stats available</p>';
-    return;
-  }
-
-  const imgUrl = `https://cdn.nba.com/headshots/nba/latest/1040x760/${id}.png`;
-  // Default to 0 if GP is missing for some reason
-  const gamesPlayed = stats.gp || 0;
-
-  container.innerHTML = `
-    <div class="card-header">
-      <img src="${imgUrl}" class="card-headshot" onerror="this.src='https://cdn.nba.com/logos/nba/nba-logoman-75-plus/primary/L/logo.svg'">
-      <div class="card-info">
-        <h3>${name}</h3>
-        <span>#${jersey} • 2025-2026 • GP - ${gamesPlayed}</span>
-      </div>
-    </div>
-    <div class="card-stats-grid">
-      <div class="stat-item"><span class="stat-label">PPG</span><span class="stat-value">${stats.pts}</span></div>
-      <div class="stat-item"><span class="stat-label">RPG</span><span class="stat-value">${stats.reb}</span></div>
-      <div class="stat-item"><span class="stat-label">APG</span><span class="stat-value">${stats.ast}</span></div>
-
-      <div class="stat-item"><span class="stat-label">FG%</span><span class="stat-value">${stats.fg_pct}%</span></div>
-      <div class="stat-item"><span class="stat-label">3P%</span><span class="stat-value">${stats.fg3_pct}%</span></div>
-      <div class="stat-item"><span class="stat-label">3PA</span><span class="stat-value">${stats.fg3a}</span></div>
-
-      <div class="stat-item"><span class="stat-label">FT%</span><span class="stat-value">${stats.ft_pct}%</span></div>
-      <div class="stat-item"><span class="stat-label">STL</span><span class="stat-value">${stats.stl}</span></div>
-      <div class="stat-item"><span class="stat-label">BLK</span><span class="stat-value">${stats.blk}</span></div>
-    </div>
-  `;
 }
 
 function fetchAndUpdateBoxScore() {
@@ -450,6 +510,7 @@ function updateMomentum() {
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
   initStaticTabs();
+  initGlobalTooltip(); // Initialize the global tooltip on load
 
   if (typeof GAME_ID !== 'undefined') {
     if (GAME_STARTED) {
