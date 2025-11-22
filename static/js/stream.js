@@ -162,6 +162,7 @@ function initGlobalTooltip() {
   document.body.appendChild(globalTooltip);
 }
 
+// --- Player Card Hover Logic ---
 function showPlayerCard(cell) {
   const playerId = cell.dataset.id;
   const playerName = cell.dataset.name;
@@ -239,7 +240,6 @@ function showPlayerCard(cell) {
       renderTooltipContent(globalTooltip, playerName, jersey, playerId, data);
 
       // CRITICAL: Re-position again after new stats render
-      // This fixes the "bottom cutoff" bug because we now know the real height
       positionCard();
     })
     .catch(err => {
@@ -251,7 +251,12 @@ function showPlayerCard(cell) {
 
 function hidePlayerCard(cell) {
   if (globalTooltip) {
+    // 1. Remove the CSS animation class
     globalTooltip.classList.remove('visible');
+
+    // 2. CRITICAL FIX: Manually reset the display property.
+    // Because showPlayerCard sets 'display: block' inline, we must override it here.
+    globalTooltip.style.display = 'none';
   }
 }
 
