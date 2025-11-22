@@ -11,6 +11,7 @@ from services.db_service import get_all_replays, get_supabase_client, increment_
 from services.redis_service import get_cache, set_cache
 from utils.optimizations import jsonify_with_etag, OrJSONProvider
 from api.momentum import get_momentum_data
+from api.player_stats import get_player_season_stats, update_league_player_stats
 
 app = Flask(__name__)
 Compress(app)
@@ -26,6 +27,7 @@ def background_cache_worker():
     Runs in the background to keep game data fresh.
     This prevents the UI from ever waiting on the slow external APIs.
     """
+    update_league_player_stats()
     while True:
         try:
             nba_games = get_basketball_games()
@@ -250,6 +252,12 @@ def games_today():
 def api_euro_games():
     games = get_euro_games_from_cache_or_api()
     return jsonify_with_etag(games, app)
+
+@app.route('/api/player-card/<int:player_id>')
+def api_player_card(player_id):
+    stats = get_player_season_stats(player_id)
+    return jsonify_with_etag(stats, app)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
